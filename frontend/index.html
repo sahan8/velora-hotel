@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Velora Hotel offers refined rooms, memorable dining and thoughtful hospitality in Colombo, Sri Lanka.">
+    <title>Velora Hotel | Timeless Hospitality in Colombo</title>
+
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&amp;family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&amp;display=swap" rel="stylesheet">
+
+   
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.9.0/css/lightgallery-bundle.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+   
+
+
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand" href="index.html" aria-label="Velora Hotel home">
+                <span class="brand-monogram">VELORA</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+                    <li class="nav-item"><a class="nav-link active" aria-current="page" href="index.html">Hotel</a></li>
+                    <li class="nav-item"><a class="nav-link" href="rooms.html">Rooms</a></li>
+                    <li class="nav-item"><a class="nav-link" href="food-drinks.html">Food &amp; Drinks</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                    <li class="nav-item ms-lg-3"><a class="btn btn-gold nav-booking-btn" href="booking.html">Book Now</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        
+        <header class="home-hero d-flex align-items-center">
+            <div class="container hero-content">
+                <div class="row">
+                    <div class="col-12 col-lg-8 col-xl-7">
+                        <p class="section-label section-label-light">Welcome to Velora Hotel</p>
+                        <h1>Stay somewhere<br><em>unforgettable.</em></h1>
+                        <p class="hero-description">Discover refined comfort, thoughtful hospitality and peaceful surroundings created for memorable stays.</p>
+                        <div class="d-flex flex-column flex-sm-row gap-3 mt-4">
+                            <a class="btn btn-gold" href="rooms.html">Explore Rooms</a>
+                            <a class="btn btn-outline-light-luxury" href="booking.html">Book Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <a class="hero-scroll d-none d-md-flex" href="#bookingSearch" aria-label="Scroll to booking search">
+                <span>Scroll</span><span class="scroll-line"></span>
+            </a>
+        </header>
+
+       
+        <section class="booking-search-wrap" id="bookingSearch" aria-label="Search available rooms">
+            <div class="container booking-search-container">
+                <aside class="booking-suggestion" id="bookingSuggestion" aria-live="polite" hidden>
+                    <button class="booking-suggestion-close" id="bookingSuggestionClose" type="button" aria-label="Close booking suggestion">&times;</button>
+                    <strong>Ready to plan your stay?</strong>
+                    <span>Start by selecting your dates.</span>
+                </aside>
+                <form class="booking-search booking-highlight" id="quickBookingForm" action="booking.html" method="get" novalidate>
+                    <div class="booking-search-header">
+                        <p>Plan Your Stay</p>
+                        <span>Check availability and find the perfect room for your stay.</span>
+                    </div>
+                    <div class="row g-0 align-items-end">
+                        <div class="col-12 col-md-6 col-lg-3 booking-field">
+                            <label for="quickArrival">Arrival</label>
+                            <input class="form-control" type="date" id="quickArrival" name="arrival" required>
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-3 booking-field">
+                            <label for="quickDeparture">Departure</label>
+                            <input class="form-control" type="date" id="quickDeparture" name="departure" required>
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-3 booking-field">
+                            <label for="quickGuests">Guests</label>
+                            <select class="form-select" id="quickGuests" name="guests" required>
+                                <option value="" selected disabled>Select guests</option>
+                                <option value="1">1 Guest</option>
+                                <option value="2">2 Guests</option>
+                                <option value="3">3 Guests</option>
+                                <option value="4">4 Guests</option>
+                                <option value="5">5+ Guests</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-3">
+                            <button class="btn btn-gold booking-submit w-100" id="quickSearchButton" type="submit">Search Rooms</button>
+                        </div>
+                    </div>
+                    <div class="form-status mt-3" id="quickBookingMessage" role="status" aria-live="polite"></div>
+                </form>
+            </div>
+        </section>
+
+        
+        <section class="section-space about-section" id="about">
+            <div class="container">
+                <div class="row g-0 align-items-stretch">
+                    <div class="col-12 col-lg-6">
+                        <div class="about-image-wrap">
+                            <img class="img-fluid about-image" src="images/about-hotel.jpeg" alt="Elegant lounge at Velora Hotel">
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="about-content">
+                            <p class="section-label">Discover our hotel</p>
+                            <h2>Where timeless elegance<br class="d-none d-md-block"> meets <em>modern comfort.</em></h2>
+                            <p>At Velora Hotel, every stay is shaped by calm surroundings, considered details and genuine Sri Lankan warmth. Our spaces blend classic character with everything today&rsquo;s traveller needs.</p>
+                            <p>From quiet mornings to memorable evenings, our team is here to make every moment feel effortless and distinctly yours.</p>
+                            <a class="text-link" href="rooms.html">Explore Our Rooms <span aria-hidden="true">&rarr;</span></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        
+        <section class="section-space facilities-section">
+            <div class="container">
+                <div class="row align-items-end mb-5">
+                    <div class="col-12 col-lg-7">
+                        <p class="section-label">Considered comforts</p>
+                        <h2>Everything you need<br>for a <em>perfect stay.</em></h2>
+                    </div>
+                    <div class="col-12 col-lg-4 ms-auto mt-3 mt-lg-0">
+                        <p class="section-intro mb-0">Thoughtful amenities and attentive service, available throughout your stay.</p>
+                    </div>
+                </div>
+                <div class="row g-4">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <article class="facility-card facility-wifi h-100">
+                            <div class="facility-overlay" aria-hidden="true"></div>
+                            <div class="facility-content">
+                                <span class="facility-number">01</span>
+                                <h3>Free WiFi</h3>
+                                <span class="facility-divider" aria-hidden="true"></span>
+                                <p class="facility-description">Stay connected with fast and reliable WiFi available throughout the hotel.</p>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <article class="facility-card facility-restaurant h-100">
+                            <div class="facility-overlay" aria-hidden="true"></div>
+                            <div class="facility-content">
+                                <span class="facility-number">02</span>
+                                <h3>Signature Restaurant</h3>
+                                <span class="facility-divider" aria-hidden="true"></span>
+                                <p class="facility-description">Enjoy a selection of local and international dishes crafted by our expert chefs.</p>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <article class="facility-card facility-pool h-100">
+                            <div class="facility-overlay" aria-hidden="true"></div>
+                            <div class="facility-content">
+                                <span class="facility-number">03</span>
+                                <h3>Swimming Pool</h3>
+                                <span class="facility-divider" aria-hidden="true"></span>
+                                <p class="facility-description">Relax and unwind in our beautiful outdoor pool surrounded by lush greenery.</p>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <article class="facility-card facility-parking h-100">
+                            <div class="facility-overlay" aria-hidden="true"></div>
+                            <div class="facility-content">
+                                <span class="facility-number">04</span>
+                                <h3>Secure Parking</h3>
+                                <span class="facility-divider" aria-hidden="true"></span>
+                                <p class="facility-description">Enjoy the convenience of secure and spacious parking for all our guests.</p>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        
+        <section class="section-space gallery-section" aria-labelledby="galleryTitle">
+            <div class="container">
+                <div class="row align-items-end mb-5">
+                    <div class="col-12 col-lg-7">
+                        <p class="section-label">Hotel gallery</p>
+                        <h2 id="galleryTitle">A glimpse into<br><em>your next escape.</em></h2>
+                    </div>
+                    <div class="col-12 col-lg-4 ms-auto mt-3 mt-lg-0">
+                        <p class="section-intro mb-2">Explore the spaces, details and experiences that make every stay memorable.</p>
+                        <span class="gallery-caption">10 photographs &middot; Tap to explore</span>
+                    </div>
+                </div>
+                <div class="row g-3 hotel-gallery" id="hotelGallery">
+                    <div class="col-12 col-md-6 col-lg-6">
+                        <a class="gallery-item gallery-item-feature" href="images/gallery-1.jpeg" data-sub-html="Velora Hotel exterior and tropical gardens" aria-label="Open hotel exterior photograph in fullscreen gallery">
+                            <img class="img-fluid w-100" src="images/gallery-1.jpeg" alt="Velora Hotel exterior surrounded by tropical gardens">
+                            <span class="gallery-view" aria-hidden="true">View</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-6">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <a class="gallery-item gallery-item-small" href="images/gallery-2.jpeg" data-sub-html="A quiet corner of the hotel" aria-label="Open hotel lounge photograph in fullscreen gallery">
+                                    <img class="img-fluid w-100" src="images/gallery-2.jpeg" alt="Peaceful guest lounge at Velora Hotel" loading="lazy">
+                                    <span class="gallery-view" aria-hidden="true">View</span>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a class="gallery-item gallery-item-small" href="images/gallery-3.jpeg" data-sub-html="The pool at Velora Hotel" aria-label="Open hotel pool photograph in fullscreen gallery">
+                                    <img class="img-fluid w-100" src="images/gallery-3.jpeg" alt="Luxury outdoor pool at Velora Hotel" loading="lazy">
+                                    <span class="gallery-view" aria-hidden="true">View</span>
+                                </a>
+                            </div>
+                            <div class="col-12">
+                                <a class="gallery-item gallery-item-medium" href="images/about-hotel.jpeg" data-sub-html="Timeless interiors and thoughtful details" aria-label="Open hotel interior photograph in fullscreen gallery">
+                                    <img class="img-fluid w-100" src="images/about-hotel.jpeg" alt="Elegant interior lounge at Velora Hotel" loading="lazy">
+                                    <span class="gallery-view" aria-hidden="true">View</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <a class="gallery-item gallery-item-medium" href="images/deluxe-room.jpeg" data-sub-html="The Deluxe Room" aria-label="Open Deluxe Room photograph in fullscreen gallery">
+                            <img class="img-fluid w-100" src="images/deluxe-room.jpeg" alt="Deluxe Room with warm natural finishes" loading="lazy">
+                            <span class="gallery-view" aria-hidden="true">View</span>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <a class="gallery-item gallery-item-medium" href="images/suite-room.jpeg" data-sub-html="The signature suite" aria-label="Open hotel suite photograph in fullscreen gallery">
+                            <img class="img-fluid w-100" src="images/suite-room.jpeg" alt="Velora Hotel luxury suite and living area" loading="lazy">
+                            <span class="gallery-view" aria-hidden="true">View</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <a class="gallery-item gallery-item-medium" href="images/restaurant.jpeg" data-sub-html="Dining at Velora Hotel" aria-label="Open hotel restaurant photograph in fullscreen gallery">
+                            <img class="img-fluid w-100" src="images/restaurant.jpeg" alt="Elegant restaurant dining room at Velora Hotel" loading="lazy">
+                            <span class="gallery-view" aria-hidden="true">View</span>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a class="gallery-item gallery-item-small" href="images/cafe.jpeg" data-sub-html="Slow afternoons at the cafe" aria-label="Open hotel cafe photograph in fullscreen gallery">
+                            <img class="img-fluid w-100" src="images/cafe.jpeg" alt="Quiet cafe seating at Velora Hotel" loading="lazy">
+                            <span class="gallery-view" aria-hidden="true">View</span>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a class="gallery-item gallery-item-small" href="images/bar.jpeg" data-sub-html="Evenings at the bar" aria-label="Open hotel bar photograph in fullscreen gallery">
+                            <img class="img-fluid w-100" src="images/bar.jpeg" alt="Atmospheric evening bar at Velora Hotel" loading="lazy">
+                            <span class="gallery-view" aria-hidden="true">View</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <a class="gallery-item gallery-item-small" href="images/dining-area-2.jpeg" data-sub-html="Garden dining beneath tropical greenery" aria-label="Open garden dining photograph in fullscreen gallery">
+                            <img class="img-fluid w-100" src="images/dining-area-2.jpeg" alt="Velora Hotel garden dining area surrounded by greenery" loading="lazy">
+                            <span class="gallery-view" aria-hidden="true">View</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+       
+        <section class="section-space featured-rooms-section">
+            <div class="container">
+                <div class="row align-items-end mb-5">
+                    <div class="col-12 col-md-8">
+                        <p class="section-label section-label-light">Rest beautifully</p>
+                        <h2>Rooms made for <em>quiet moments.</em></h2>
+                    </div>
+                    <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0">
+                        <a class="text-link text-link-light" href="rooms.html">View All Rooms <span aria-hidden="true">&rarr;</span></a>
+                    </div>
+                </div>
+                <div class="row g-4">
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <article class="room-card h-100">
+                            <a class="room-image-wrap" href="rooms.html" aria-label="Discover Standard Room">
+                                <img src="images/standard-room.jpeg" alt="Standard Room at Velora Hotel">
+                            </a>
+                            <div class="room-card-body">
+                                <p class="room-category">Classic comfort</p>
+                                <h3>Standard Room</h3>
+                                <p>A welcoming retreat with refined essentials for a restful city stay.</p>
+                                <div class="room-card-meta"><span>Up to 2 guests</span><strong>LKR 18,000 <small>/ night</small></strong></div>
+                                <ul class="room-card-facilities"><li>Free WiFi</li><li>Air Conditioning</li><li>Smart TV</li></ul>
+                                <div class="room-card-actions"><a class="btn btn-outline-dark-luxury" href="rooms.html">View Details</a><a class="btn btn-primary-luxury book-room-link" href="booking.html" data-room="standard">Book Room</a></div>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <article class="room-card h-100">
+                            <a class="room-image-wrap" href="rooms.html" aria-label="Discover Deluxe Room">
+                                <img src="images/deluxe-room.jpeg" alt="Deluxe Room at Velora Hotel">
+                            </a>
+                            <div class="room-card-body">
+                                <p class="room-category">Elevated living</p>
+                                <h3>Deluxe Room</h3>
+                                <p>Generous space, warm natural textures and considered modern details.</p>
+                                <div class="room-card-meta"><span>Up to 3 guests</span><strong>LKR 25,000 <small>/ night</small></strong></div>
+                                <ul class="room-card-facilities"><li>Free WiFi</li><li>King Bed</li><li>Mini Bar</li></ul>
+                                <div class="room-card-actions"><a class="btn btn-outline-dark-luxury" href="rooms.html">View Details</a><a class="btn btn-primary-luxury book-room-link" href="booking.html" data-room="deluxe">Book Room</a></div>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <article class="room-card h-100">
+                            <a class="room-image-wrap" href="rooms.html" aria-label="Discover Luxury Suite">
+                                <img src="images/suite-room.jpeg" alt="Luxury Suite at Velora Hotel">
+                            </a>
+                            <div class="room-card-body">
+                                <p class="room-category">Signature stay</p>
+                                <h3>Luxury Suite</h3>
+                                <p>An elegant private haven designed for lingering, memorable stays.</p>
+                                <div class="room-card-meta"><span>Up to 4 guests</span><strong>LKR 45,000 <small>/ night</small></strong></div>
+                                <ul class="room-card-facilities"><li>Free WiFi</li><li>Living Area</li><li>Mini Bar</li></ul>
+                                <div class="room-card-actions"><a class="btn btn-outline-dark-luxury" href="rooms.html">View Details</a><a class="btn btn-primary-luxury book-room-link" href="booking.html" data-room="suite">Book Room</a></div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+                <div class="text-center mt-5 d-md-none">
+                    <a class="btn btn-outline-light-luxury" href="rooms.html">View All Rooms</a>
+                </div>
+            </div>
+        </section>
+
+        
+        <section class="dining-preview">
+            <div class="container-fluid p-0">
+                <div class="row g-0 align-items-stretch">
+                    <div class="col-12 col-lg-6 dining-image-wrap">
+                        <img src="images/restaurant.jpeg" alt="Elegant restaurant dining at Velora Hotel">
+                    </div>
+                    <div class="col-12 col-lg-6 dining-content d-flex align-items-center">
+                        <div>
+                            <p class="section-label section-label-light">Food &amp; Drinks</p>
+                            <h2>Exceptional flavours.<br><em>Memorable moments.</em></h2>
+                            <p>Gather around the table for thoughtfully prepared dishes, seasonal ingredients and warm, attentive service from morning until evening.</p>
+                            <a class="btn btn-gold" href="food-drinks.html">Discover Dining</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+       
+        <section class="section-space reviews-section">
+            <div class="container">
+                <div class="text-center section-heading-centered">
+                    <p class="section-label">Guest stories</p>
+                    <h2>Hospitality, remembered.</h2>
+                </div>
+                <div class="row g-4 mt-4">
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <figure class="review-card h-100 mb-0">
+                            <div class="review-stars" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                            <blockquote>&ldquo;A beautifully calm hotel with genuinely thoughtful service. Every detail made our stay feel special.&rdquo;</blockquote>
+                            <figcaption>Amelia Thompson <span>United Kingdom</span></figcaption>
+                        </figure>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <figure class="review-card h-100 mb-0">
+                            <div class="review-stars" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                            <blockquote>&ldquo;The room was elegant, the food exceptional and the team made Colombo feel immediately welcoming.&rdquo;</blockquote>
+                            <figcaption>Daniel Perera <span>Australia</span></figcaption>
+                        </figure>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <figure class="review-card h-100 mb-0">
+                            <div class="review-stars" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                            <blockquote>&ldquo;Quiet luxury without pretence. We especially loved the peaceful pool and unhurried breakfasts.&rdquo;</blockquote>
+                            <figcaption>Sofia Martinez <span>Spain</span></figcaption>
+                        </figure>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        
+        <section class="location-section">
+            <div class="container-fluid p-0">
+                <div class="row g-0 align-items-stretch">
+                    <div class="col-12 col-lg-5 location-content d-flex align-items-center">
+                        <div>
+                            <p class="section-label section-label-light">Our location</p>
+                            <h2>Perfectly placed<br>for <em>your journey.</em></h2>
+                            <p class="location-intro">A peaceful base within easy reach of Colombo&rsquo;s most memorable sights, shores and neighbourhoods.</p>
+                            <address class="location-details mb-0">
+                                <div><span>Hotel Address</span><p>123 Hotel Road, Colombo, Sri Lanka</p></div>
+                                <div><span>Telephone</span><p><a href="tel:+94771234567">+94 77 123 4567</a></p></div>
+                                <div><span>Email</span><p><a href="mailto:info@velorahotel.com">info@velorahotel.com</a></p></div>
+                            </address>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-7">
+                        <div class="location-map h-100">
+                            <iframe src="https://www.google.com/maps?q=Colombo%2C%20Sri%20Lanka&amp;output=embed" title="Map showing Colombo, Sri Lanka" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+      
+        <section class="section-space explore-section">
+            <div class="container">
+                <div class="row align-items-end mb-5">
+                    <div class="col-12 col-md-8">
+                        <p class="section-label">Beyond the hotel</p>
+                        <h2>Explore nearby.</h2>
+                    </div>
+                    <div class="col-12 col-md-4 mt-3 mt-md-0">
+                        <p class="section-intro mb-0">Discover the places and stories that make our corner of Sri Lanka unforgettable.</p>
+                    </div>
+                </div>
+                <div class="row g-4">
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <article class="explore-card h-100">
+                            <div class="explore-image-wrap"><img src="images/explore-1.jpeg" alt="Historic attraction near Colombo"></div>
+                            <div class="explore-card-body"><h3>Local Attractions</h3><p>Landmarks, gardens and city highlights, all waiting close by.</p></div>
+                        </article>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <article class="explore-card h-100">
+                            <div class="explore-image-wrap"><img src="images/explore-2.jpeg" alt="Beautiful Sri Lankan beach"></div>
+                            <div class="explore-card-body"><h3>Beautiful Beaches</h3><p>Golden shores and ocean sunsets within easy reach of the hotel.</p></div>
+                        </article>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <article class="explore-card h-100">
+                            <div class="explore-image-wrap"><img src="images/explore-3.jpeg" alt="Traditional Sri Lankan local culture"></div>
+                            <div class="explore-card-body"><h3>Local Culture</h3><p>Markets, crafts and flavours that reveal the spirit of Colombo.</p></div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+   
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row g-5 footer-main">
+                <div class="col-12 col-lg-5">
+                    <a class="footer-brand" href="index.html">VELORA</a>
+                    <p class="footer-message">Timeless hospitality,<br>thoughtful service and<br>unforgettable stays.</p>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2 ms-lg-auto">
+                    <h2 class="footer-heading">Navigation</h2>
+                    <ul class="footer-links list-unstyled mb-0">
+                        <li><a href="index.html">Hotel</a></li>
+                        <li><a href="rooms.html">Rooms</a></li>
+                        <li><a href="food-drinks.html">Food &amp; Drinks</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                        <li><a href="booking.html">Book Now</a></li>
+                    </ul>
+                </div>
+                <div class="col-12 col-md-5 col-lg-3">
+                    <h2 class="footer-heading">Contact</h2>
+                    <ul class="footer-links list-unstyled mb-0">
+                        <li><a href="tel:+94771234567">+94 77 123 4567</a></li>
+                        <li><a href="mailto:info@velorahotel.com">info@velorahotel.com</a></li>
+                        <li>Colombo, Sri Lanka</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                <p class="mb-0">&copy; 2026 Velora Hotel. All Rights Reserved.</p>
+                <p class="mb-0">dev by sahan</p>
+            </div>
+        </div>
+    </footer>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.9.0/lightgallery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.9.0/plugins/zoom/lg-zoom.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.9.0/plugins/thumbnail/lg-thumbnail.umd.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

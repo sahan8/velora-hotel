@@ -1,0 +1,81 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Begin your reservation at Velora Hotel in Colombo."><title>Book Your Stay | Velora Hotel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&amp;family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&amp;display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+
+
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top" aria-label="Main navigation"><div class="container"><a class="navbar-brand" href="index.html" aria-label="Velora Hotel home"><span class="brand-monogram">VELORA</span></a><button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div class="collapse navbar-collapse" id="mainNavbar"><ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2"><li class="nav-item"><a class="nav-link" href="index.html">Hotel</a></li><li class="nav-item"><a class="nav-link" href="rooms.html">Rooms</a></li><li class="nav-item"><a class="nav-link" href="food-drinks.html">Food &amp; Drinks</a></li><li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li><li class="nav-item ms-lg-3"><a class="btn btn-gold nav-booking-btn active" aria-current="page" href="booking.html">Book Now</a></li></ul></div></div></nav>
+    <main>
+
+
+
+<header class="inner-hero booking-hero d-flex align-items-center"><div class="container inner-hero-content"><div class="row"><div class="col-12 col-lg-7"><p class="section-label section-label-light">Reservations</p><h1>Your stay<br><em>starts here.</em></h1><p>Choose your dates, find your room and create a stay designed around you.</p></div></div></div></header>
+
+
+
+<section class="section-space booking-interface"><div class="container">
+
+
+
+<div class="booking-progress" id="bookingProgress" aria-label="Booking progress">
+                <div class="booking-progress-step active" data-step="1"><span>01</span><strong>Search</strong></div><div class="booking-progress-step" data-step="2"><span>02</span><strong>Select Room</strong></div><div class="booking-progress-step" data-step="3"><span>03</span><strong>Select Rate</strong></div><div class="booking-progress-step" data-step="4"><span>04</span><strong>Summary</strong></div><div class="booking-progress-step" data-step="5"><span>05</span><strong>Guest Details</strong></div><div class="booking-progress-step" data-step="6"><span>06</span><strong>Payment</strong></div>
+            </div>
+
+            <div class="booking-content">
+
+
+
+<section class="booking-step active" id="stepSearch"><div class="booking-step-heading"><p class="section-label">Step 01</p><h2>When will you<br><em>be joining us?</em></h2><p>Select your dates and guests to begin.</p></div><form id="bookingSearchForm" novalidate><div class="row g-4">
+                    <div class="col-12 col-md-6"><label class="form-label" for="arrivalDate">Arrival Date</label><input class="form-control" type="date" id="arrivalDate" name="arrivalDate" required></div><div class="col-12 col-md-6"><label class="form-label" for="departureDate">Departure Date</label><input class="form-control" type="date" id="departureDate" name="departureDate" required></div>
+                    <div class="col-12 col-md-4"><label class="form-label" for="adultGuests">Adults</label><select class="form-select" id="adultGuests" name="adultGuests" required><option value="1">1 Adult</option><option value="2" selected>2 Adults</option><option value="3">3 Adults</option><option value="4">4 Adults</option><option value="5">5 Adults</option></select></div>
+                    <div class="col-12 col-md-4"><label class="form-label" for="teenGuests">Children 13&ndash;18</label><select class="form-select" id="teenGuests" name="teenGuests"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+                    <div class="col-12 col-md-4"><label class="form-label" for="childGuests">Children 0&ndash;12</label><select class="form-select" id="childGuests" name="childGuests"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+                    <div class="col-12 mt-5"><button class="btn btn-primary-luxury" id="searchRoomsBtn" type="submit">Search Available Rooms</button><div class="form-status mt-3" id="bookingSearchMessage" role="status" aria-live="polite"></div></div>
+                </div></form></section>
+
+
+
+<section class="booking-step" id="stepRoom"><div class="booking-step-heading"><p class="section-label">Step 02</p><h2>Select <em>your room.</em></h2></div><div class="search-summary"><div><span>Arrival</span><strong id="roomSearchArrival">12 Sep 2026</strong></div><div><span>Departure</span><strong id="roomSearchDeparture">15 Sep 2026</strong></div><div><span>Guests</span><strong id="roomSearchGuests">2 Adults</strong></div></div><div class="booking-room-list">
+                    <article class="booking-room-option"><img src="images/standard-room.jpeg" alt="Standard Room"><div class="booking-room-info"><h3>Standard Room</h3><p>A serene space with thoughtful essentials.</p><span>Maximum 2 guests</span></div><div class="booking-room-price"><span>From</span><strong>LKR 18,000</strong><small>per night</small><button class="btn btn-primary-luxury show-rates-btn" type="button" data-room="standard">Show Rates</button></div></article>
+                    <article class="booking-room-option"><img src="images/deluxe-room.jpeg" alt="Deluxe Room"><div class="booking-room-info"><h3>Deluxe Room</h3><p>Generous comfort and refined details.</p><span>Maximum 3 guests</span></div><div class="booking-room-price"><span>From</span><strong>LKR 25,000</strong><small>per night</small><button class="btn btn-primary-luxury show-rates-btn" type="button" data-room="deluxe">Show Rates</button></div></article>
+                    <article class="booking-room-option"><img src="images/family-room.jpeg" alt="Family Room"><div class="booking-room-info"><h3>Family Room</h3><p>Flexible space designed for time together.</p><span>Maximum 5 guests</span></div><div class="booking-room-price"><span>From</span><strong>LKR 32,000</strong><small>per night</small><button class="btn btn-primary-luxury show-rates-btn" type="button" data-room="family">Show Rates</button></div></article>
+                    <article class="booking-room-option"><img src="images/suite-room.jpeg" alt="The Suite"><div class="booking-room-info"><h3>The Suite</h3><p>Signature luxury with a private living area.</p><span>Maximum 4 guests</span></div><div class="booking-room-price"><span>From</span><strong>LKR 45,000</strong><small>per night</small><button class="btn btn-primary-luxury show-rates-btn" type="button" data-room="suite">Show Rates</button></div></article>
+                </div><div class="form-status mt-3" id="roomSelectionMessage" role="status" aria-live="polite"></div><button class="btn btn-outline-dark-luxury mt-4 booking-back-btn" type="button" data-back-step="1">Back to Search</button></section>
+
+
+
+<section class="booking-step" id="stepRate"><div class="booking-step-heading"><p class="section-label">Step 03</p><h2>Choose <em>your rate.</em></h2></div><div class="selected-room-strip"><img id="rateSelectedRoomImage" src="images/deluxe-room.jpeg" alt="Selected Deluxe Room"><div><span>Selected Room</span><h3 id="rateSelectedRoom">Deluxe Room</h3><p id="rateSelectedDates">12&ndash;15 September 2026 &middot; 3 nights</p></div></div><fieldset class="rate-options"><legend class="visually-hidden">Select a room rate</legend><label class="rate-card" for="rateRoomOnly"><input type="radio" id="rateRoomOnly" name="rateType" value="room-only"><span><strong>Room Only</strong><small>Flexible stay with accommodation only.</small></span><b id="roomOnlyPrice">LKR 25,000 <small>/ night</small></b></label><label class="rate-card" for="rateBreakfast"><input type="radio" id="rateBreakfast" name="rateType" value="breakfast"><span><strong>Breakfast Included</strong><small>Daily signature breakfast for registered guests.</small></span><b id="breakfastPrice">LKR 29,000 <small>/ night</small></b></label></fieldset><div class="form-status mb-3" id="rateSelectionMessage" role="status" aria-live="polite"></div><div class="booking-step-actions"><button class="btn btn-outline-dark-luxury booking-back-btn" type="button" data-back-step="2">Back</button><button class="btn btn-primary-luxury" id="continueToSummaryBtn" type="button">Continue</button></div></section>
+
+
+
+<section class="booking-step" id="stepSummary"><div class="booking-step-heading"><p class="section-label">Step 04</p><h2>Your stay, <em>at a glance.</em></h2></div><div class="summary-panel"><div class="summary-row"><span>Selected Room</span><strong id="summaryRoom">Deluxe Room</strong></div><div class="summary-row"><span>Arrival</span><strong id="summaryArrival">12 September 2026</strong></div><div class="summary-row"><span>Departure</span><strong id="summaryDeparture">15 September 2026</strong></div><div class="summary-row"><span>Number of Nights</span><strong id="summaryNights">3</strong></div><div class="summary-row"><span>Adults / Children</span><strong id="summaryGuests">2 Adults / 0 Children</strong></div><div class="summary-row"><span>Selected Rate</span><strong id="summaryRate">Room Only</strong></div><div class="summary-row"><span>Room Total</span><strong id="summarySubtotal">LKR 75,000</strong></div><div class="summary-row"><span>Taxes / Additional Fees</span><strong id="summaryTax">LKR 13,500</strong></div><div class="summary-row summary-total"><span>Total Price</span><strong id="summaryTotal">LKR 88,500</strong></div></div><div class="booking-step-actions mt-4"><button class="btn btn-outline-dark-luxury booking-back-btn" type="button" data-back-step="3">Back</button><button class="btn btn-primary-luxury" id="continueToGuestBtn" type="button">Continue to Guest Details</button></div></section>
+
+
+
+<section class="booking-step" id="stepGuest"><div class="booking-step-heading"><p class="section-label">Step 05</p><h2>Tell us about <em>yourself.</em></h2></div><form id="guestDetailsForm" novalidate><div class="row g-4"><div class="col-12 col-md-6"><label class="form-label" for="firstName">First Name</label><input class="form-control" type="text" id="firstName" name="firstName" autocomplete="given-name" required></div><div class="col-12 col-md-6"><label class="form-label" for="lastName">Last Name</label><input class="form-control" type="text" id="lastName" name="lastName" autocomplete="family-name" required></div><div class="col-12 col-md-6"><label class="form-label" for="guestEmail">Email Address</label><input class="form-control" type="email" id="guestEmail" name="guestEmail" autocomplete="email" required></div><div class="col-12 col-md-6"><label class="form-label" for="guestPhone">Phone Number</label><input class="form-control" type="tel" id="guestPhone" name="guestPhone" autocomplete="tel" required></div><div class="col-12"><label class="form-label" for="guestCountry">Country</label><input class="form-control" type="text" id="guestCountry" name="guestCountry" autocomplete="country-name" required></div><div class="col-12 mt-5"><div class="booking-step-actions"><button class="btn btn-outline-dark-luxury booking-back-btn" type="button" data-back-step="4">Back</button><button class="btn btn-primary-luxury" id="continueToPaymentBtn" type="submit">Continue to Payment</button></div></div></div></form></section>
+
+
+
+<section class="booking-step" id="stepPayment"><div class="booking-step-heading"><p class="section-label">Step 06</p><h2>Secure <em>your stay.</em></h2><p>Frontend payment preview only. No payment will be processed.</p></div><div class="row g-5"><div class="col-12 col-lg-7"><form id="paymentForm" novalidate><fieldset><legend class="payment-method-title">Payment Method</legend><label class="payment-method" for="paymentCard"><input type="radio" id="paymentCard" name="paymentMethod" value="card" checked> Credit / Debit Card</label></fieldset><div class="row g-4 mt-2"><div class="col-12"><label class="form-label" for="cardholderName">Cardholder Name</label><input class="form-control" type="text" id="cardholderName" name="cardholderName" autocomplete="cc-name" required></div><div class="col-12"><label class="form-label" for="cardNumber">Card Number</label><input class="form-control" type="text" inputmode="numeric" id="cardNumber" name="cardNumber" autocomplete="cc-number" placeholder="0000 0000 0000 0000" required></div><div class="col-7"><label class="form-label" for="cardExpiry">Expiry Date</label><input class="form-control" type="text" inputmode="numeric" id="cardExpiry" name="cardExpiry" autocomplete="cc-exp" placeholder="MM / YY" required></div><div class="col-5"><label class="form-label" for="cardCvv">CVV</label><input class="form-control" type="text" inputmode="numeric" id="cardCvv" name="cardCvv" autocomplete="cc-csc" placeholder="000" required></div><div class="col-12 mt-5"><div class="booking-step-actions"><button class="btn btn-outline-dark-luxury booking-back-btn" type="button" data-back-step="5">Back</button><button class="btn btn-primary-luxury" id="payConfirmBtn" type="submit">Pay &amp; Confirm</button></div><div class="form-status mt-3" id="paymentConfirmation" role="status" aria-live="polite"></div></div></div></form></div><div class="col-12 col-lg-5"><aside class="payment-summary"><p class="section-label">Payment summary</p><div><span>Room</span><strong id="paymentRoom">Deluxe Room</strong></div><div><span>Dates</span><strong id="paymentDates">12&ndash;15 Sep 2026</strong></div><div><span>Rate</span><strong id="paymentRate">Room Only</strong></div><div class="payment-total"><span>Total</span><strong id="paymentTotal">LKR 88,500</strong></div></aside></div></div></section>
+            </div>
+        </div></section>
+    </main>
+
+
+
+<footer class="site-footer"><div class="container"><div class="row g-5 footer-main"><div class="col-12 col-lg-5"><a class="footer-brand" href="index.html">VELORA</a><p class="footer-message">Timeless hospitality,<br>thoughtful service and<br>unforgettable stays.</p></div><div class="col-6 col-md-4 col-lg-2 ms-lg-auto"><h2 class="footer-heading">Navigation</h2><ul class="footer-links list-unstyled mb-0"><li><a href="index.html">Hotel</a></li><li><a href="rooms.html">Rooms</a></li><li><a href="food-drinks.html">Food &amp; Drinks</a></li><li><a href="contact.html">Contact</a></li><li><a href="booking.html">Book Now</a></li></ul></div><div class="col-12 col-md-5 col-lg-3"><h2 class="footer-heading">Contact</h2><ul class="footer-links list-unstyled mb-0"><li><a href="tel:+94771234567">+94 77 123 4567</a></li><li><a href="mailto:info@velorahotel.com">info@velorahotel.com</a></li><li>Colombo, Sri Lanka</li></ul></div></div><div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2"><p class="mb-0">&copy; 2026 Velora Hotel. All Rights Reserved.</p><p class="mb-0">Colombo, Sri Lanka</p></div></div></footer>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script src="script.js"></script>
+</body>
+</html>
+
