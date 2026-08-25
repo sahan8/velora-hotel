@@ -2,6 +2,8 @@
 
 const BOOKING_STORAGE_KEY = "veloraHotelBooking";
 
+// Booking data
+
 const rooms = [
     { id: "standard", name: "Standard Room", price: 18000, maxGuests: 2, image: "images/standard-room.jpeg" },
     { id: "deluxe", name: "Deluxe Room", price: 25000, maxGuests: 3, image: "images/deluxe-room.jpeg" },
@@ -44,6 +46,17 @@ let booking = loadBooking();
 function saveBooking() {
     sessionStorage.setItem(BOOKING_STORAGE_KEY, JSON.stringify(booking));
 }
+
+// DOM helpers
+function byId(id) {
+    return document.getElementById(id);
+}
+
+function all(selector) {
+    return document.querySelectorAll(selector);
+}
+
+// Dates and prices
 
 function getTodayValue() {
     const today = new Date();
@@ -99,6 +112,8 @@ function getRoom(roomId) {
     return rooms.find((room) => room.id === roomId) || null;
 }
 
+// Form validation
+
 function setStatus(element, message, type = "error") {
     if (!element) {
         return;
@@ -146,6 +161,18 @@ function clearFormValidation(form) {
         field.classList.remove("is-invalid", "is-valid");
     });
     form.querySelectorAll(".invalid-feedback").forEach((feedback) => feedback.remove());
+}
+
+function validateRequiredField(field, message, validator = (value) => Boolean(value)) {
+    const value = field.value.trim();
+
+    if (!validator(value)) {
+        setFieldError(field, message);
+        return false;
+    }
+
+    markFieldValid(field);
+    return true;
 }
 
 function validateEmail(email) {
@@ -204,17 +231,19 @@ function validateDates(arrivalInput, departureInput) {
     return valid;
 }
 
+// Home and rooms pages
+
 function initializeQuickSearch() {
-    const form = document.getElementById("quickBookingForm");
+    const form = byId("quickBookingForm");
 
     if (!form) {
         return;
     }
 
-    const arrivalInput = document.getElementById("quickArrival");
-    const departureInput = document.getElementById("quickDeparture");
-    const guestsInput = document.getElementById("quickGuests");
-    const message = document.getElementById("quickBookingMessage");
+    const arrivalInput = byId("quickArrival");
+    const departureInput = byId("quickDeparture");
+    const guestsInput = byId("quickGuests");
+    const message = byId("quickBookingMessage");
 
     setDateRestrictions(arrivalInput, departureInput);
 
@@ -252,8 +281,8 @@ function initializeQuickSearch() {
 }
 
 function initializeBookingSuggestion() {
-    const suggestion = document.getElementById("bookingSuggestion");
-    const closeButton = document.getElementById("bookingSuggestionClose");
+    const suggestion = byId("bookingSuggestion");
+    const closeButton = byId("bookingSuggestionClose");
 
     if (!suggestion || !closeButton) {
         return;
@@ -289,7 +318,7 @@ function initializeBookingSuggestion() {
 }
 
 function initializeRoomLinks() {
-    document.querySelectorAll(".book-room-link[data-room]").forEach((link) => {
+    all(".book-room-link[data-room]").forEach((link) => {
         link.addEventListener("click", () => {
             const selectedRoom = getRoom(link.dataset.room);
 
@@ -326,6 +355,8 @@ function calculateBookingTotal() {
     booking.total = booking.subtotal + booking.tax;
 }
 
+// Booking page
+
 function initializeBookingPage() {
     const bookingArea = document.querySelector(".booking-interface");
 
@@ -333,14 +364,14 @@ function initializeBookingPage() {
         return;
     }
 
-    const steps = Array.from(document.querySelectorAll(".booking-step"));
-    const progressSteps = Array.from(document.querySelectorAll(".booking-progress-step"));
-    const arrivalInput = document.getElementById("arrivalDate");
-    const departureInput = document.getElementById("departureDate");
-    const adultInput = document.getElementById("adultGuests");
-    const teenInput = document.getElementById("teenGuests");
-    const childInput = document.getElementById("childGuests");
-    const searchForm = document.getElementById("bookingSearchForm");
+    const steps = all(".booking-step");
+    const progressSteps = all(".booking-progress-step");
+    const arrivalInput = byId("arrivalDate");
+    const departureInput = byId("departureDate");
+    const adultInput = byId("adultGuests");
+    const teenInput = byId("teenGuests");
+    const childInput = byId("childGuests");
+    const searchForm = byId("bookingSearchForm");
 
     function showStep(stepNumber, shouldScroll = true) {
         steps.forEach((step, index) => {
@@ -390,9 +421,10 @@ function initializeBookingPage() {
     }
 
     function updateSearchSummary() {
-        document.getElementById("roomSearchArrival").textContent = formatDate(booking.arrival, true);
-        document.getElementById("roomSearchDeparture").textContent = formatDate(booking.departure, true);
-        document.getElementById("roomSearchGuests").textContent = `${getTotalGuests()} guest${getTotalGuests() === 1 ? "" : "s"}`;
+        const totalGuests = getTotalGuests();
+        byId("roomSearchArrival").textContent = formatDate(booking.arrival, true);
+        byId("roomSearchDeparture").textContent = formatDate(booking.departure, true);
+        byId("roomSearchGuests").textContent = `${totalGuests} guest${totalGuests === 1 ? "" : "s"}`;
     }
 
     function updateRoomAvailability() {
@@ -590,11 +622,11 @@ function initializeBookingPage() {
 
         Object.values(fields).forEach(clearFieldError);
 
-        if (!fields.firstName.value.trim()) { setFieldError(fields.firstName, "Please enter your first name."); valid = false; } else { markFieldValid(fields.firstName); }
-        if (!fields.lastName.value.trim()) { setFieldError(fields.lastName, "Please enter your last name."); valid = false; } else { markFieldValid(fields.lastName); }
-        if (!validateEmail(fields.email.value.trim())) { setFieldError(fields.email, "Please enter a valid email address."); valid = false; } else { markFieldValid(fields.email); }
-        if (!validatePhone(fields.phone.value.trim())) { setFieldError(fields.phone, "Please enter a valid phone number."); valid = false; } else { markFieldValid(fields.phone); }
-        if (!fields.country.value.trim()) { setFieldError(fields.country, "Please enter your country."); valid = false; } else { markFieldValid(fields.country); }
+        valid = validateRequiredField(fields.firstName, "Please enter your first name.") && valid;
+        valid = validateRequiredField(fields.lastName, "Please enter your last name.") && valid;
+        valid = validateRequiredField(fields.email, "Please enter a valid email address.", validateEmail) && valid;
+        valid = validateRequiredField(fields.phone, "Please enter a valid phone number.", validatePhone) && valid;
+        valid = validateRequiredField(fields.country, "Please enter your country.") && valid;
 
         if (!valid) {
             return;
@@ -650,6 +682,8 @@ function initializeBookingPage() {
     });
 }
 
+// Contact and shared page features
+
 function initializeContactForm() {
     const form = document.getElementById("contactForm");
 
@@ -670,11 +704,11 @@ function initializeContactForm() {
         clearFormValidation(form);
         setStatus(success, "");
 
-        if (!name.value.trim()) { setFieldError(name, "Please enter your name."); valid = false; } else { markFieldValid(name); }
-        if (!validateEmail(email.value.trim())) { setFieldError(email, "Please enter a valid email address."); valid = false; } else { markFieldValid(email); }
-        if (!validatePhone(phone.value.trim())) { setFieldError(phone, "Please enter a valid phone number."); valid = false; } else { markFieldValid(phone); }
-        if (!subject.value.trim()) { setFieldError(subject, "Please enter a subject."); valid = false; } else { markFieldValid(subject); }
-        if (!message.value.trim()) { setFieldError(message, "Please enter your message."); valid = false; } else { markFieldValid(message); }
+        valid = validateRequiredField(name, "Please enter your name.") && valid;
+        valid = validateRequiredField(email, "Please enter a valid email address.", validateEmail) && valid;
+        valid = validateRequiredField(phone, "Please enter a valid phone number.", validatePhone) && valid;
+        valid = validateRequiredField(subject, "Please enter a subject.") && valid;
+        valid = validateRequiredField(message, "Please enter your message.") && valid;
 
         if (valid) {
             setStatus(success, "Thank you. Your message is ready to be sent.", "success");
