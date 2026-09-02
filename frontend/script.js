@@ -1,8 +1,8 @@
-"use strict";
 
 const {
-    rooms, rates, emptyBooking, loadBooking, saveBooking, byId, all,
+    emptyBooking, loadBooking, saveBooking, byId, all,
     getTodayValue, calculateNights, formatCurrency, formatDate, getRoom,
+    getRate, loadCatalogData,
     setStatus, clearFieldError, setFieldError, markFieldValid,
     clearFormValidation, validateRequiredField, validateEmail, validatePhone,
     setDateRestrictions, validateDates
@@ -120,7 +120,6 @@ function initializeRoomLinks() {
             booking.room = selectedRoom.id;
             booking.rate = null;
             booking.subtotal = 0;
-            booking.tax = 0;
             booking.total = 0;
             booking.currentStep = hasValidDates ? 3 : 1;
             saveBooking(booking);
@@ -130,19 +129,17 @@ function initializeRoomLinks() {
 
 function calculateBookingTotal() {
     const selectedRoom = getRoom(booking.room);
-    const selectedRate = rates[booking.rate];
+    const selectedRate = getRate(booking.room, booking.rate);
 
     if (!selectedRoom || !selectedRate || booking.nights < 1) {
         booking.subtotal = 0;
-        booking.tax = 0;
         booking.total = 0;
         return;
     }
 
     const nightlyRate = selectedRoom.price + selectedRate.extra;
     booking.subtotal = nightlyRate * booking.nights;
-    booking.tax = Math.round(booking.subtotal * 0.1);
-    booking.total = booking.subtotal + booking.tax;
+    booking.total = booking.subtotal;
 }
 
 // Booking page
@@ -162,6 +159,7 @@ function initializeBookingPage() {
     const teenInput = byId("teenGuests");
     const childInput = byId("childGuests");
     const searchForm = byId("bookingSearchForm");
+    let availableRoomCodes = null;
 
     function resetFieldValidation(field, statusElement = null) {
         if (!field) return;
@@ -218,7 +216,7 @@ function initializeBookingPage() {
             return Math.min(step, 2);
         }
 
-        if (!rates[booking.rate]) {
+        if (!getRate(booking.room, booking.rate)) {
             return Math.min(step, 3);
         }
 
@@ -234,7 +232,7 @@ function initializeBookingPage() {
 
         const selectedRoom = getRoom(booking.room);
         if (!selectedRoom || selectedRoom.maxGuests < getTotalGuests()) return 2;
-        if (!rates[booking.rate]) return 3;
+        if (!getRate(booking.room, booking.rate)) return 3;
         if (!booking.guest) return 5;
         return 6;
     }
@@ -246,23 +244,48 @@ function initializeBookingPage() {
         byId("roomSearchGuests").textContent = `${totalGuests} guest${totalGuests === 1 ? "" : "s"}`;
     }
 
-    function updateRoomAvailability() {
-        const totalGuests = getTotalGuests();
-        let availableRooms = 0;
+  function updateRoomAvailability() {
+    const totalGuests = getTotalGuests();
+    let availableRooms = 0;
 
-        document.querySelectorAll(".show-rates-btn").forEach((button) => {
-            const room = getRoom(button.dataset.room);
-            const unavailable = !room || room.maxGuests < totalGuests;
-            if (!unavailable) availableRooms += 1;
-            button.disabled = unavailable;
-            button.closest(".booking-room-option").classList.toggle("room-unavailable", unavailable);
-            button.textContent = unavailable ? "Not Available" : "Show Rates";
-        });
+    document.querySelectorAll(".show-rates-btn").forEach((button) => {
+        const room = getRoom(button.dataset.room);
 
-        if (totalGuests > 0 && availableRooms === 0) {
-            setStatus(document.getElementById("roomSelectionMessage"), `No single room accommodates ${totalGuests} guests. Please adjust your guest count or contact the hotel.`);
+        const exceedsCapacity =
+            !room || room.maxGuests < totalGuests;
+
+        const unavailableInDatabase =
+            availableRoomCodes !== null &&
+            !availableRoomCodes.has(button.dataset.room);
+
+        const unavailable =
+            exceedsCapacity || unavailableInDatabase;
+
+        if (!unavailable) {
+            availableRooms += 1;
         }
+
+        button.disabled = unavailable;
+
+        button
+            .closest(".booking-room-option")
+            .classList.toggle("room-unavailable", unavailable);
+
+        button.textContent =
+            unavailable ? "Not Available" : "Show Rates";
+    });
+
+    const message = document.getElementById(
+        "roomSelectionMessage"
+    );
+
+    if (totalGuests > 0 && availableRooms === 0) {
+        setStatus(
+            message,
+            `No rooms are available for ${totalGuests} guests and the selected dates.`
+        );
     }
+}
 
     function updateRateStep() {
         const selectedRoom = getRoom(booking.room);
@@ -276,7 +299,10 @@ function initializeBookingPage() {
         document.getElementById("rateSelectedRoomImage").alt = `Selected ${selectedRoom.name}`;
         document.getElementById("rateSelectedDates").textContent = `${formatDate(booking.arrival)} – ${formatDate(booking.departure)} · ${booking.nights} night${booking.nights === 1 ? "" : "s"}`;
         document.getElementById("roomOnlyPrice").innerHTML = `${formatCurrency(selectedRoom.price)} <small>/ night</small>`;
-        document.getElementById("breakfastPrice").innerHTML = `${formatCurrency(selectedRoom.price + rates.breakfast.extra)} <small>/ night</small>`;
+        const roomOnlyRate = getRate(selectedRoom.id, "room-only");
+        const breakfastRate = getRate(selectedRoom.id, "breakfast");
+        document.getElementById("roomOnlyPrice").innerHTML = `${formatCurrency(selectedRoom.price + (roomOnlyRate?.extra || 0))} <small>/ night</small>`;
+        document.getElementById("breakfastPrice").innerHTML = `${formatCurrency(selectedRoom.price + (breakfastRate?.extra || 0))} <small>/ night</small>`;
 
         document.querySelectorAll('input[name="rateType"]').forEach((input) => {
             input.checked = input.value === booking.rate;
@@ -285,7 +311,7 @@ function initializeBookingPage() {
 
     function updateSummary() {
         const selectedRoom = getRoom(booking.room);
-        const selectedRate = rates[booking.rate];
+        const selectedRate = getRate(booking.room, booking.rate);
         const children = Number(booking.teens) + Number(booking.children);
 
         calculateBookingTotal();
@@ -296,14 +322,13 @@ function initializeBookingPage() {
         document.getElementById("summaryGuests").textContent = `${booking.adults} adult${Number(booking.adults) === 1 ? "" : "s"} / ${children} children`;
         document.getElementById("summaryRate").textContent = selectedRate ? selectedRate.name : "Not selected";
         document.getElementById("summarySubtotal").textContent = formatCurrency(booking.subtotal);
-        document.getElementById("summaryTax").textContent = formatCurrency(booking.tax);
         document.getElementById("summaryTotal").textContent = formatCurrency(booking.total);
         saveBooking(booking);
     }
 
     function updatePaymentSummary() {
         const selectedRoom = getRoom(booking.room);
-        const selectedRate = rates[booking.rate];
+        const selectedRate = getRate(booking.room, booking.rate);
         document.getElementById("paymentRoom").textContent = selectedRoom ? selectedRoom.name : "Not selected";
         document.getElementById("paymentDates").textContent = `${formatDate(booking.arrival, true)} – ${formatDate(booking.departure, true)}`;
         document.getElementById("paymentRate").textContent = selectedRate ? selectedRate.name : "Not selected";
@@ -344,7 +369,22 @@ function initializeBookingPage() {
     const paymentMessage = byId("paymentConfirmation");
     paymentForm.querySelectorAll("input").forEach((field) => resetFieldValidation(field, paymentMessage));
 
-    searchForm.addEventListener("submit", (event) => {
+    const expiryInput = byId("cardExpiry");
+    expiryInput.addEventListener("input", (event) => {
+        const digits = expiryInput.value.replace(/\D/g, "").slice(0, 4);
+        const isDeleting = event.inputType?.startsWith("delete");
+
+        if (digits.length < 2 || (isDeleting && digits.length === 2)) {
+            expiryInput.value = digits;
+            return;
+        }
+
+        const month = digits.slice(0, 2);
+        const year = digits.slice(2);
+        expiryInput.value = `${month} / ${year}`;
+    });
+
+    searchForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         const message = document.getElementById("bookingSearchMessage");
         setStatus(message, "");
@@ -373,15 +413,69 @@ function initializeBookingPage() {
         booking.nights = calculateNights(booking.arrival, booking.departure);
         booking.rate = null;
         booking.subtotal = 0;
-        booking.tax = 0;
         booking.total = 0;
         booking.guest = null;
         booking.maxStepReached = 2;
 
+        const searchButton = document.getElementById(
+    "searchRoomsBtn"
+);
+
+searchButton.disabled = true;
+setStatus(message, "Checking room availability...", "success");
+
+try {
+    const query = new URLSearchParams({
+        arrival: booking.arrival,
+        departure: booking.departure,
+        adults: booking.adults,
+        teens: booking.teens,
+        children: booking.children
+    });
+
+    const response = await fetch(
+        `../backend/api/availability.php?${query}`
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result.error || "Unable to check room availability."
+        );
+    }
+
+    availableRoomCodes = new Set(
+        result.rooms.map((room) => room.code)
+    );
+
+    setStatus(message, "");
+} catch (error) {
+    setStatus(
+        message,
+        error.message || "Unable to check room availability."
+    );
+
+    return;
+} finally {
+    searchButton.disabled = false;
+}
+
         const selectedRoom = getRoom(booking.room);
-        if (selectedRoom && selectedRoom.maxGuests < getTotalGuests()) {
+
+        if (
+            selectedRoom &&
+            (
+                selectedRoom.maxGuests < getTotalGuests() ||
+                !availableRoomCodes.has(selectedRoom.id)
+            )
+        ) {
             booking.room = null;
-            setStatus(document.getElementById("roomSelectionMessage"), `Your previous room cannot accommodate ${getTotalGuests()} guests. Please choose another room.`);
+
+            setStatus(
+                document.getElementById("roomSelectionMessage"),
+                "Your previous room is unavailable. Please choose another room."
+            );
         }
 
         updateSearchSummary();
@@ -468,41 +562,201 @@ function initializeBookingPage() {
         showStep(6);
     });
 
-    document.getElementById("paymentForm").addEventListener("submit", (event) => {
+document
+    .getElementById("paymentForm")
+    .addEventListener("submit", async (event) => {
         event.preventDefault();
-        const cardholder = document.getElementById("cardholderName");
-        const cardNumber = document.getElementById("cardNumber");
-        const expiry = document.getElementById("cardExpiry");
-        const cvv = document.getElementById("cardCvv");
-        const confirmation = document.getElementById("paymentConfirmation");
-        const payButton = document.getElementById("payConfirmBtn");
-        const numericCard = cardNumber.value.replace(/\D/g, "");
-        const expiryMatch = expiry.value.trim().match(/^(0[1-9]|1[0-2])\s*\/\s*(\d{2})$/);
+
+        const cardholder =
+            document.getElementById("cardholderName");
+
+        const cardNumber =
+            document.getElementById("cardNumber");
+
+        const expiry =
+            document.getElementById("cardExpiry");
+
+        const cvv =
+            document.getElementById("cardCvv");
+
+        const confirmation =
+            document.getElementById("paymentConfirmation");
+
+        const payButton =
+            document.getElementById("payConfirmBtn");
+
+        const numericCard =
+            cardNumber.value.replace(/\D/g, "");
+
+        const expiryMatch = expiry.value
+            .trim()
+            .match(/^(0[1-9]|1[0-2])\s*\/\s*(\d{2})$/);
+
         const now = new Date();
+
         const expiryIsCurrent = expiryMatch
-            ? new Date(2000 + Number(expiryMatch[2]), Number(expiryMatch[1]), 0) >= new Date(now.getFullYear(), now.getMonth(), 1)
+            ? new Date(
+                2000 + Number(expiryMatch[2]),
+                Number(expiryMatch[1]),
+                0
+            ) >= new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                1
+            )
             : false;
+
         let valid = true;
 
-        [cardholder, cardNumber, expiry, cvv].forEach(clearFieldError);
+        [cardholder, cardNumber, expiry, cvv]
+            .forEach(clearFieldError);
+
         setStatus(confirmation, "");
 
-        if (!cardholder.value.trim()) { setFieldError(cardholder, "Please enter the cardholder name."); valid = false; } else { markFieldValid(cardholder); }
-        if (numericCard.length < 13 || numericCard.length > 19) { setFieldError(cardNumber, "Enter a card number between 13 and 19 digits."); valid = false; } else { markFieldValid(cardNumber); }
-        if (!expiryIsCurrent) { setFieldError(expiry, "Enter a current expiry date in MM / YY format."); valid = false; } else { markFieldValid(expiry); }
-        if (!/^\d{3,4}$/.test(cvv.value.trim())) { setFieldError(cvv, "Enter a 3 or 4 digit CVV."); valid = false; } else { markFieldValid(cvv); }
+        if (!cardholder.value.trim()) {
+            setFieldError(
+                cardholder,
+                "Please enter the cardholder name."
+            );
 
-        if (!valid || payButton.disabled) {
+            valid = false;
+        } else {
+            markFieldValid(cardholder);
+        }
+
+        if (
+            numericCard.length < 13 ||
+            numericCard.length > 19
+        ) {
+            setFieldError(
+                cardNumber,
+                "Enter a card number between 13 and 19 digits."
+            );
+
+            valid = false;
+        } else {
+            markFieldValid(cardNumber);
+        }
+
+        if (!expiryIsCurrent) {
+            setFieldError(
+                expiry,
+                "Enter a current expiry date in MM / YY format."
+            );
+
+            valid = false;
+        } else {
+            markFieldValid(expiry);
+        }
+
+        if (!/^\d{3,4}$/.test(cvv.value.trim())) {
+            setFieldError(
+                cvv,
+                "Enter a 3 or 4 digit CVV."
+            );
+
+            valid = false;
+        } else {
+            markFieldValid(cvv);
+        }
+
+        if (!valid) {
             return;
         }
 
         payButton.disabled = true;
-        const reference = `VEL-${Math.floor(100000 + Math.random() * 900000)}`;
-        setStatus(confirmation, `Your Velora Hotel booking details were completed successfully. Reference: ${reference}. Payment processing will be connected to the backend later.`, "success");
+
+        setStatus(
+            confirmation,
+            "Confirming your booking...",
+            "success"
+        );
+
+        try {
+            const selectedDatabaseRate = getRate(booking.room, booking.rate);
+
+            if (!selectedDatabaseRate) {
+                throw new Error(
+                    "The selected room rate was not found."
+                );
+            }
+
+            if (!booking.requestToken) {
+                booking.requestToken = typeof crypto.randomUUID === "function"
+                    ? crypto.randomUUID()
+                    : `booking-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                saveBooking(booking);
+            }
+
+            const bookingData = {
+                requestToken: booking.requestToken,
+                arrival: booking.arrival,
+                departure: booking.departure,
+                adults: Number(booking.adults),
+                teens: Number(booking.teens),
+                children: Number(booking.children),
+                roomTypeId: Number(
+                    selectedDatabaseRate.roomTypeId
+                ),
+                rateId: Number(
+                    selectedDatabaseRate.id
+                ),
+                guest: booking.guest
+            };
+
+            const bookingResponse = await fetch(
+                "../backend/api/bookings.php",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(bookingData)
+                }
+            );
+
+            const result =
+                await bookingResponse.json();
+
+            if (!bookingResponse.ok) {
+                throw new Error(
+                    result.error ||
+                    "The booking could not be confirmed."
+                );
+            }
+
+            const guestName = booking.guest.firstName;
+            const successDates = `${formatDate(booking.arrival, true)} – ${formatDate(booking.departure, true)}`;
+
+            document.getElementById("successGuestName").textContent = `${guestName}.`;
+            document.getElementById("successBookingReference").textContent = result.reference;
+            document.getElementById("successRoom").textContent = result.room;
+            document.getElementById("successDates").textContent = successDates;
+            document.getElementById("successTotal").textContent = formatCurrency(result.total);
+            document.getElementById("paymentStepHeading").hidden = true;
+            document.getElementById("paymentStepContent").hidden = true;
+            document.getElementById("bookingSuccessPanel").hidden = false;
+
+            booking = { ...emptyBooking };
+            availableRoomCodes = null;
+            saveBooking(booking);
+        } catch (error) {
+            setStatus(
+                confirmation,
+                error.message ||
+                "The booking could not be confirmed."
+            );
+
+            payButton.disabled = false;
+        }
     });
 
     document.querySelectorAll(".booking-back-btn").forEach((button) => {
         button.addEventListener("click", () => showStep(Number(button.dataset.backStep)));
+    });
+
+    document.getElementById("startNewBookingBtn").addEventListener("click", () => {
+        window.location.reload();
     });
 
     progressSteps.forEach((progressStep) => {
@@ -540,27 +794,104 @@ function initializeContactForm() {
         return;
     }
 
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
         event.preventDefault();
+
         const name = document.getElementById("contactName");
         const email = document.getElementById("contactEmail");
         const phone = document.getElementById("contactPhone");
         const subject = document.getElementById("contactSubject");
         const message = document.getElementById("contactMessage");
-        const success = document.getElementById("contactSuccess");
+        const status = document.getElementById("contactSuccess");
+        const submitButton = form.querySelector('button[type="submit"]');
+
         let valid = true;
 
         clearFormValidation(form);
-        setStatus(success, "");
+        setStatus(status, "");
 
-        valid = validateRequiredField(name, "Please enter your name.") && valid;
-        valid = validateRequiredField(email, "Please enter a valid email address.", validateEmail) && valid;
-        valid = validateRequiredField(phone, "Please enter a valid phone number.", validatePhone) && valid;
-        valid = validateRequiredField(subject, "Please enter a subject.") && valid;
-        valid = validateRequiredField(message, "Please enter your message.") && valid;
+        valid =
+            validateRequiredField(
+                name,
+                "Please enter your name."
+            ) && valid;
 
-        if (valid) {
-            setStatus(success, "Thank you. Your message is ready to be sent.", "success");
+        valid =
+            validateRequiredField(
+                email,
+                "Please enter a valid email address.",
+                validateEmail
+            ) && valid;
+
+        valid =
+            validateRequiredField(
+                phone,
+                "Please enter a valid phone number.",
+                validatePhone
+            ) && valid;
+
+        valid =
+            validateRequiredField(
+                subject,
+                "Please enter a subject."
+            ) && valid;
+
+        valid =
+            validateRequiredField(
+                message,
+                "Please enter your message."
+            ) && valid;
+
+        if (!valid) {
+            return;
+        }
+
+        const contactData = {
+            name: name.value.trim(),
+            email: email.value.trim(),
+            phone: phone.value.trim(),
+            subject: subject.value.trim(),
+            message: message.value.trim()
+        };
+
+        submitButton.disabled = true;
+        setStatus(status, "Sending your message...", "success");
+
+        try {
+            const response = await fetch(
+                "../backend/api/contact.php",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(contactData)
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error || "Unable to send your message."
+                );
+            }
+
+            setStatus(
+                status,
+                result.message,
+                "success"
+            );
+
+            form.reset();
+            clearFormValidation(form);
+        } catch (error) {
+            setStatus(
+                status,
+                error.message || "Unable to send your message."
+            );
+        } finally {
+            submitButton.disabled = false;
         }
     });
 }
@@ -611,15 +942,28 @@ function initializeNavbar() {
     }
 
     const updateNavbar = () => {
-        navbar.classList.toggle("navbar-scrolled", window.scrollY > 70);
+        const isDesktop = window.matchMedia("(min-width: 992px)").matches;
+        navbar.classList.toggle("navbar-scrolled", isDesktop && window.scrollY > 70);
     };
 
     updateNavbar();
     window.addEventListener("scroll", updateNavbar, { passive: true });
+    window.addEventListener("resize", updateNavbar);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     initializeNavbar();
+
+    try {
+        await loadCatalogData();
+    } catch (error) {
+        console.error(error);
+        setStatus(
+            byId("bookingSearchMessage"),
+            "Unable to load rooms and rates. Please try again."
+        );
+    }
+
     initializeQuickSearch();
     initializeBookingSuggestion();
     initializeRoomLinks();

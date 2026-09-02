@@ -1,0 +1,3 @@
+# Local database credentials
+backend/config/database.local.php
+

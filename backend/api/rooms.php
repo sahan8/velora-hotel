@@ -2,7 +2,7 @@
 
 header('Content-Type: application/json');
 
-require_once '../config/database.php';
+require_once dirname(__DIR__) . '/config/database.php';
 
 $sql = "SELECT * FROM room_types WHERE status = 'active'";
 

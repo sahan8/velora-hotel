@@ -2,11 +2,20 @@
 
 declare(strict_types=1);
 
-$host = '127.0.0.1';
-$port = '3306';
-$database = 'velora_hotel';
-$username = 'root';
-$password = '';
+$configFile = __DIR__ . '/database.local.php';
+
+if (!is_file($configFile)) {
+    http_response_code(500);
+    exit('Database configuration is missing.');
+}
+
+$config = require $configFile;
+
+$host = $config['host'];
+$port = $config['port'];
+$database = $config['database'];
+$username = $config['username'];
+$password = $config['password'];
 
 $dsn = "mysql:host={$host};port={$port};dbname={$database};charset=utf8mb4";
 
