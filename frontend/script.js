@@ -1,102 +1,14 @@
 "use strict";
 
-const BOOKING_STORAGE_KEY = "veloraHotelBooking";
-
-// Booking data
-
-const rooms = [
-    { id: "standard", name: "Standard Room", price: 18000, maxGuests: 2, image: "images/standard-room.jpeg" },
-    { id: "deluxe", name: "Deluxe Room", price: 25000, maxGuests: 3, image: "images/deluxe-room.jpeg" },
-    { id: "family", name: "Family Room", price: 32000, maxGuests: 5, image: "images/family-room.jpeg" },
-    { id: "suite", name: "The Suite", price: 45000, maxGuests: 4, image: "images/suite-room.jpeg" }
-];
-
-const rates = {
-    "room-only": { name: "Room Only", extra: 0 },
-    breakfast: { name: "Breakfast Included", extra: 4000 }
-};
-
-const emptyBooking = {
-    arrival: "",
-    departure: "",
-    adults: 1,
-    teens: 0,
-    children: 0,
-    room: null,
-    rate: null,
-    nights: 0,
-    subtotal: 0,
-    tax: 0,
-    total: 0,
-    guest: null,
-    currentStep: 1
-};
-
-function loadBooking() {
-    try {
-        const savedBooking = JSON.parse(sessionStorage.getItem(BOOKING_STORAGE_KEY));
-        return savedBooking ? { ...emptyBooking, ...savedBooking } : { ...emptyBooking };
-    } catch (error) {
-        return { ...emptyBooking };
-    }
-}
+const {
+    rooms, rates, emptyBooking, loadBooking, saveBooking, byId, all,
+    getTodayValue, calculateNights, formatCurrency, formatDate, getRoom,
+    setStatus, clearFieldError, setFieldError, markFieldValid,
+    clearFormValidation, validateRequiredField, validateEmail, validatePhone,
+    setDateRestrictions, validateDates
+} = window.VeloraUtils;
 
 let booking = loadBooking();
-
-function saveBooking() {
-    sessionStorage.setItem(BOOKING_STORAGE_KEY, JSON.stringify(booking));
-}
-
-// DOM helpers
-function byId(id) {
-    return document.getElementById(id);
-}
-
-function all(selector) {
-    return document.querySelectorAll(selector);
-}
-
-// Dates and prices
-
-function getTodayValue() {
-    const today = new Date();
-    const offset = today.getTimezoneOffset() * 60000;
-    return new Date(today.getTime() - offset).toISOString().split("T")[0];
-}
-
-function parseDate(dateValue) {
-    return dateValue ? new Date(`${dateValue}T00:00:00`) : null;
-}
-
-function calculateNights(arrival, departure) {
-    const arrivalDate = parseDate(arrival);
-    const departureDate = parseDate(departure);
-
-    if (!arrivalDate || !departureDate) {
-        return 0;
-    }
-
-    const difference = departureDate.getTime() - arrivalDate.getTime();
-    return Math.max(0, Math.round(difference / 86400000));
-}
-
-function formatCurrency(amount) {
-    return `LKR ${new Intl.NumberFormat("en-LK", { maximumFractionDigits: 0 }).format(amount)}`;
-}
-
-function formatDate(dateValue, short = false) {
-    const date = parseDate(dateValue);
-
-    if (!date) {
-        return "Not selected";
-    }
-
-    return new Intl.DateTimeFormat("en-LK", {
-        day: "numeric",
-        month: short ? "short" : "long",
-        year: "numeric"
-    }).format(date);
-}
 
 function getTotalGuests() {
     return Number(booking.adults) + Number(booking.teens) + Number(booking.children);
@@ -106,129 +18,6 @@ function hasValidBookingSearch() {
     return booking.arrival >= getTodayValue()
         && calculateNights(booking.arrival, booking.departure) > 0
         && Number(booking.adults) >= 1;
-}
-
-function getRoom(roomId) {
-    return rooms.find((room) => room.id === roomId) || null;
-}
-
-// Form validation
-
-function setStatus(element, message, type = "error") {
-    if (!element) {
-        return;
-    }
-
-    element.textContent = message;
-    element.classList.toggle("form-status-success", type === "success");
-    element.classList.toggle("form-status-error", type === "error" && Boolean(message));
-}
-
-function clearFieldError(field) {
-    if (!field) {
-        return;
-    }
-
-    field.classList.remove("is-invalid");
-    const feedback = field.parentElement.querySelector(".invalid-feedback");
-
-    if (feedback) {
-        feedback.remove();
-    }
-}
-
-function setFieldError(field, message) {
-    clearFieldError(field);
-    field.classList.add("is-invalid");
-
-    const feedback = document.createElement("div");
-    feedback.className = "invalid-feedback";
-    feedback.textContent = message;
-    field.insertAdjacentElement("afterend", feedback);
-}
-
-function markFieldValid(field) {
-    clearFieldError(field);
-    field.classList.add("is-valid");
-}
-
-function clearFormValidation(form) {
-    if (!form) {
-        return;
-    }
-
-    form.querySelectorAll(".is-invalid, .is-valid").forEach((field) => {
-        field.classList.remove("is-invalid", "is-valid");
-    });
-    form.querySelectorAll(".invalid-feedback").forEach((feedback) => feedback.remove());
-}
-
-function validateRequiredField(field, message, validator = (value) => Boolean(value)) {
-    const value = field.value.trim();
-
-    if (!validator(value)) {
-        setFieldError(field, message);
-        return false;
-    }
-
-    markFieldValid(field);
-    return true;
-}
-
-function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validatePhone(phone) {
-    return phone.replace(/\D/g, "").length >= 7;
-}
-
-function setDateRestrictions(arrivalInput, departureInput) {
-    if (!arrivalInput || !departureInput) {
-        return;
-    }
-
-    const today = getTodayValue();
-    arrivalInput.min = today;
-    departureInput.min = arrivalInput.value || today;
-
-    arrivalInput.addEventListener("change", () => {
-        departureInput.min = arrivalInput.value || today;
-
-        if (departureInput.value && departureInput.value <= arrivalInput.value) {
-            departureInput.value = "";
-        }
-    });
-}
-
-function validateDates(arrivalInput, departureInput) {
-    let valid = true;
-    const today = getTodayValue();
-
-    clearFieldError(arrivalInput);
-    clearFieldError(departureInput);
-
-    if (!arrivalInput.value) {
-        setFieldError(arrivalInput, "Please select your arrival date.");
-        valid = false;
-    } else if (arrivalInput.value < today) {
-        setFieldError(arrivalInput, "Arrival cannot be in the past.");
-        valid = false;
-    } else {
-        markFieldValid(arrivalInput);
-    }
-
-    if (!departureInput.value) {
-        setFieldError(departureInput, "Please select your departure date.");
-        valid = false;
-    } else if (arrivalInput.value && departureInput.value <= arrivalInput.value) {
-        setFieldError(departureInput, "Departure must be after arrival.");
-        valid = false;
-    } else {
-        markFieldValid(departureInput);
-    }
-
-    return valid;
 }
 
 // Home and rooms pages
@@ -275,7 +64,7 @@ function initializeQuickSearch() {
             nights: calculateNights(arrivalInput.value, departureInput.value),
             currentStep: 2
         };
-        saveBooking();
+        saveBooking(booking);
         window.location.href = "booking.html";
     });
 }
@@ -299,6 +88,7 @@ function initializeBookingSuggestion() {
     }
 
     // Booking popup
+
     window.setTimeout(() => {
         suggestion.hidden = false;
         suggestion.classList.add("show");
@@ -333,7 +123,7 @@ function initializeRoomLinks() {
             booking.tax = 0;
             booking.total = 0;
             booking.currentStep = hasValidDates ? 3 : 1;
-            saveBooking();
+            saveBooking(booking);
         });
     });
 }
@@ -373,19 +163,38 @@ function initializeBookingPage() {
     const childInput = byId("childGuests");
     const searchForm = byId("bookingSearchForm");
 
+    function resetFieldValidation(field, statusElement = null) {
+        if (!field) return;
+
+        const reset = () => {
+            clearFieldError(field);
+            field.classList.remove("is-valid");
+            if (statusElement) setStatus(statusElement, "");
+            if (field.closest("#paymentForm")) byId("payConfirmBtn").disabled = false;
+        };
+
+        field.addEventListener(field.matches("select, input[type='date']") ? "change" : "input", reset);
+    }
+
     function showStep(stepNumber, shouldScroll = true) {
+        const safeStepNumber = Math.min(6, Math.max(1, Number(stepNumber) || 1));
+
         steps.forEach((step, index) => {
-            step.classList.toggle("active", index + 1 === stepNumber);
+            const isActive = index + 1 === safeStepNumber;
+            step.classList.toggle("active", isActive);
+            step.hidden = !isActive;
         });
 
         progressSteps.forEach((step, index) => {
             const number = index + 1;
-            step.classList.toggle("active", number === stepNumber);
-            step.classList.toggle("completed", number < stepNumber);
+            step.classList.toggle("active", number === safeStepNumber);
+            step.classList.toggle("completed", number < safeStepNumber);
+            step.setAttribute("aria-current", number === safeStepNumber ? "step" : "false");
         });
 
-        booking.currentStep = stepNumber;
-        saveBooking();
+        booking.currentStep = safeStepNumber;
+        booking.maxStepReached = Math.max(Number(booking.maxStepReached) || 1, safeStepNumber);
+        saveBooking(booking);
 
         if (shouldScroll) {
             bookingArea.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -418,6 +227,16 @@ function initializeBookingPage() {
         }
 
         return step;
+    }
+
+    function getAvailableStepLimit() {
+        if (!hasValidSearch()) return 1;
+
+        const selectedRoom = getRoom(booking.room);
+        if (!selectedRoom || selectedRoom.maxGuests < getTotalGuests()) return 2;
+        if (!rates[booking.rate]) return 3;
+        if (!booking.guest) return 5;
+        return 6;
     }
 
     function updateSearchSummary() {
@@ -479,7 +298,7 @@ function initializeBookingPage() {
         document.getElementById("summarySubtotal").textContent = formatCurrency(booking.subtotal);
         document.getElementById("summaryTax").textContent = formatCurrency(booking.tax);
         document.getElementById("summaryTotal").textContent = formatCurrency(booking.total);
-        saveBooking();
+        saveBooking(booking);
     }
 
     function updatePaymentSummary() {
@@ -514,6 +333,17 @@ function initializeBookingPage() {
     updatePaymentSummary();
     showStep(getSafeStep(), false);
 
+    const searchMessage = byId("bookingSearchMessage");
+    [arrivalInput, departureInput, adultInput, teenInput, childInput]
+        .forEach((field) => resetFieldValidation(field, searchMessage));
+
+    const guestForm = byId("guestDetailsForm");
+    guestForm.querySelectorAll("input").forEach((field) => resetFieldValidation(field));
+
+    const paymentForm = byId("paymentForm");
+    const paymentMessage = byId("paymentConfirmation");
+    paymentForm.querySelectorAll("input").forEach((field) => resetFieldValidation(field, paymentMessage));
+
     searchForm.addEventListener("submit", (event) => {
         event.preventDefault();
         const message = document.getElementById("bookingSearchMessage");
@@ -545,24 +375,18 @@ function initializeBookingPage() {
         booking.subtotal = 0;
         booking.tax = 0;
         booking.total = 0;
+        booking.guest = null;
+        booking.maxStepReached = 2;
 
         const selectedRoom = getRoom(booking.room);
-        if (selectedRoom && selectedRoom.maxGuests >= getTotalGuests()) {
-            updateSearchSummary();
-            updateRateStep();
-            saveBooking();
-            showStep(3);
-            return;
-        }
-
-        if (selectedRoom) {
+        if (selectedRoom && selectedRoom.maxGuests < getTotalGuests()) {
             booking.room = null;
             setStatus(document.getElementById("roomSelectionMessage"), `Your previous room cannot accommodate ${getTotalGuests()} guests. Please choose another room.`);
         }
 
         updateSearchSummary();
         updateRoomAvailability();
-        saveBooking();
+        saveBooking(booking);
         showStep(2);
     });
 
@@ -580,7 +404,7 @@ function initializeBookingPage() {
             booking.room = selectedRoom.id;
             booking.rate = null;
             updateRateStep();
-            saveBooking();
+            saveBooking(booking);
             showStep(3);
         });
     });
@@ -589,7 +413,7 @@ function initializeBookingPage() {
         input.addEventListener("change", () => {
             booking.rate = input.value;
             calculateBookingTotal();
-            saveBooking();
+            saveBooking(booking);
             setStatus(document.getElementById("rateSelectionMessage"), "");
         });
     });
@@ -639,7 +463,7 @@ function initializeBookingPage() {
             phone: fields.phone.value.trim(),
             country: fields.country.value.trim()
         };
-        saveBooking();
+        saveBooking(booking);
         updatePaymentSummary();
         showStep(6);
     });
@@ -679,6 +503,31 @@ function initializeBookingPage() {
 
     document.querySelectorAll(".booking-back-btn").forEach((button) => {
         button.addEventListener("click", () => showStep(Number(button.dataset.backStep)));
+    });
+
+    progressSteps.forEach((progressStep) => {
+        progressStep.setAttribute("role", "button");
+        progressStep.setAttribute("tabindex", "0");
+
+        const navigateToStep = () => {
+            const targetStep = Number(progressStep.dataset.step);
+            const furthestAllowedStep = Math.min(
+                Number(booking.maxStepReached) || 1,
+                getAvailableStepLimit()
+            );
+
+            if (targetStep <= furthestAllowedStep) {
+                showStep(targetStep);
+            }
+        };
+
+        progressStep.addEventListener("click", navigateToStep);
+        progressStep.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                navigateToStep();
+            }
+        });
     });
 }
 

@@ -169,9 +169,7 @@ h3 em {
 }
 
 .brand-monogram {
-    border-right: 1px solid rgba(201, 162, 39, 0.7);
     letter-spacing: 0.06em;
-    padding-right: 0.7rem;
 }
 
 .brand-name {
@@ -323,6 +321,12 @@ h3 em {
     transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
 }
 
+.nav-booking-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--white);
+}
+
 .nav-booking-btn:hover,
 .nav-booking-btn:focus-visible,
 .nav-booking-btn.active:hover,
@@ -330,7 +334,7 @@ h3 em {
 .nav-booking-btn:active {
     background: var(--gold);
     border-color: var(--gold);
-    color: var(--forest-earth);
+    color: var(--white);
     transform: translateY(-2px);
 }
 
@@ -2062,12 +2066,32 @@ h3 em {
         --section-space: 3.5rem;
     }
 
-    .navbar {
+    .navbar,
+    .navbar.navbar-scrolled {
+        background: var(--forest-earth);
         min-height: 74px;
+        padding-block: 0.75rem;
     }
 
-    .navbar-brand {
+    .navbar-brand,
+    .navbar.navbar-scrolled .navbar-brand {
         font-size: 1.7rem;
+        line-height: 1;
+        margin-right: 0.75rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .navbar-toggler {
+        flex-shrink: 0;
+        position: relative;
+        z-index: 2;
+    }
+
+    .navbar-collapse {
+        margin-top: 0.75rem;
+        position: relative;
+        z-index: 1;
     }
 
     .brand-name {
