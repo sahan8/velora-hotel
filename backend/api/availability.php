@@ -6,13 +6,16 @@ require_once '../config/database.php';
 
 $arrival = $_GET['arrival'] ?? '';
 $departure = $_GET['departure'] ?? '';
-$guests = (int) ($_GET['guests'] ?? 0);
+$adults = (int) ($_GET['adults'] ?? 0);
+$teens = (int) ($_GET['teens'] ?? 0);
+$children = (int) ($_GET['children'] ?? 0);
+$guests = $adults + $teens + $children;
 
-if ($arrival === '' || $departure === '' || $guests < 1) {
+if ($arrival === '' || $departure === '' || $adults < 1 || $teens < 0 || $children < 0) {
     http_response_code(400);
 
     echo json_encode([
-        'error' => 'Arrival, departure and guests are required'
+        'error' => 'Arrival, departure and at least one adult are required'
     ]);
 
     exit;
@@ -57,4 +60,16 @@ $statement->execute([
 
 $availableRooms = $statement->fetchAll();
 
-echo json_encode($availableRooms);
+echo json_encode([
+    'success' => true,
+    'message' => 'Availability checked successfully',
+    'search' => [
+        'arrival' => $arrival,
+        'departure' => $departure,
+        'adults' => $adults,
+        'teens' => $teens,
+        'children' => $children,
+        'totalGuests' => $guests
+    ],
+    'rooms' => $availableRooms
+]);

@@ -1,21 +1,10 @@
 (() => {
 "use strict";
-(() => {
-"use strict";
 
 const BOOKING_STORAGE_KEY = "veloraHotelBooking";
 
-const rooms = [
-    { id: "standard", name: "Standard Room", price: 18000, maxGuests: 2, image: "images/standard-room.jpeg" },
-    { id: "deluxe", name: "Deluxe Room", price: 25000, maxGuests: 3, image: "images/deluxe-room.jpeg" },
-    { id: "family", name: "Family Room", price: 32000, maxGuests: 5, image: "images/family-room.jpeg" },
-    { id: "suite", name: "The Suite", price: 45000, maxGuests: 4, image: "images/suite-room.jpeg" }
-];
-
-const rates = {
-    "room-only": { name: "Room Only", extra: 0 },
-    breakfast: { name: "Breakfast Included", extra: 4000 }
-};
+const rooms = [];
+const rates = [];
 
 const emptyBooking = {
     arrival: "",
@@ -104,6 +93,47 @@ function formatDate(dateValue, short = false) {
 
 function getRoom(roomId) {
     return rooms.find((room) => room.id === roomId) || null;
+}
+
+function getRate(roomCode, rateCode) {
+    return rates.find((rate) => {
+        return rate.roomCode === roomCode && rate.code === rateCode;
+    }) || null;
+}
+
+async function loadCatalogData() {
+    const [roomsResponse, ratesResponse] = await Promise.all([
+        fetch("../backend/api/rooms.php"),
+        fetch("../backend/api/rates.php")
+    ]);
+
+    if (!roomsResponse.ok || !ratesResponse.ok) {
+        throw new Error("Unable to load rooms and rates.");
+    }
+
+    const roomRows = await roomsResponse.json();
+    const rateRows = await ratesResponse.json();
+
+    rooms.splice(0, rooms.length, ...roomRows.map((room) => ({
+        id: room.code,
+        databaseId: Number(room.id),
+        name: room.name,
+        description: room.description,
+        price: Number(room.base_price),
+        maxGuests: Number(room.capacity),
+        totalRooms: Number(room.total_rooms),
+        image: room.image
+    })));
+
+    rates.splice(0, rates.length, ...rateRows.map((rate) => ({
+        id: Number(rate.id),
+        roomTypeId: Number(rate.room_type_id),
+        roomCode: rate.room_code,
+        code: rate.code,
+        name: rate.name,
+        extra: Number(rate.extra_price),
+        includesBreakfast: Boolean(Number(rate.includes_breakfast))
+    })));
 }
 
 function setStatus(element, message, type = "error") {
@@ -236,6 +266,8 @@ window.VeloraUtils = {
     formatCurrency,
     formatDate,
     getRoom,
+    getRate,
+    loadCatalogData,
     setStatus,
     clearFieldError,
     setFieldError,
@@ -247,7 +279,5 @@ window.VeloraUtils = {
     setDateRestrictions,
     validateDates
 };
-
-})();
 
 })();
