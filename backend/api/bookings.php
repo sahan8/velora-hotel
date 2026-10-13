@@ -74,11 +74,14 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL) || isTooLong($email, 255)) {
     sendError(400, 'Please provide a valid email address');
 }
 
-if (!isValidPhone($phone)) {
+if (!isValidPhone($phone) || isTooLong($phone, 30)) {
     sendError(400, 'Phone number must contain between 7 and 15 digits');
 }
 
 sendExistingBookingIfAny($pdo, $requestToken);
+
+// Stops one visitor from filling every room with fake bookings.
+enforceRateLimit($pdo, 'booking', 5, 3600);
 
 try {
     // Lock the room type row so concurrent bookings for it wait for this

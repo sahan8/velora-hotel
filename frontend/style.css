@@ -2315,3 +2315,252 @@ h3 em {
         transform: none;
     }
 }
+
+/* Rolling nav text: the visible copies are pseudo-elements, the span's own text only reserves space. */
+.navbar .nav-link,
+.nav-booking-btn {
+    --roll-color: rgba(255, 255, 255, 0.76);
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus-visible,
+.navbar .nav-link.active {
+    --roll-color: var(--gold);
+}
+
+.nav-booking-btn {
+    --roll-color: var(--forest-earth);
+}
+
+.nav-booking-btn:hover,
+.nav-booking-btn:focus-visible,
+.nav-booking-btn.active {
+    --roll-color: var(--white);
+}
+
+.roll {
+    color: transparent;
+    display: inline-block;
+    line-height: 1.5;
+    overflow: hidden;
+    position: relative;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.roll::before,
+.roll::after {
+    color: var(--roll-color);
+    content: attr(data-text);
+    left: 0;
+    position: absolute;
+    top: 0;
+    transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1), color 0.25s ease;
+}
+
+.roll::after {
+    transform: translateY(100%);
+}
+
+a:hover > .roll::before,
+a:focus-visible > .roll::before {
+    transform: translateY(-100%);
+}
+
+a:hover > .roll::after,
+a:focus-visible > .roll::after {
+    transform: translateY(0);
+}
+
+/* Floating pill navbar (all screen sizes). */
+/* Lets the pill animate to its fit-content width; browsers without it just snap. */
+:root {
+    interpolate-size: allow-keywords;
+    /* No rubber-band bounce: it drags the fixed navbar with the page. */
+    overscroll-behavior-y: none;
+}
+
+.navbar,
+.navbar.navbar-scrolled {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    min-height: 0;
+    padding-block: 1.25rem;
+}
+
+.navbar.navbar-scrolled {
+    padding-block: 0.75rem;
+}
+
+.navbar > .container {
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    background: rgba(22, 37, 24, 0.86);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    box-shadow: 0 10px 30px rgba(5, 15, 7, 0.25);
+    padding: 0.4rem;
+    transition: background-color 0.35s ease, box-shadow 0.35s ease, border-radius 0.35s ease, width 0.5s cubic-bezier(0.65, 0, 0.35, 1), margin 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.navbar.navbar-scrolled > .container {
+    background: rgba(22, 37, 24, 0.96);
+    box-shadow: 0 14px 40px rgba(5, 15, 7, 0.35);
+}
+
+/* Round "V" monogram in place of the full wordmark; the link keeps its aria-label. */
+.navbar-brand,
+.navbar.navbar-scrolled .navbar-brand {
+    align-items: center;
+    background: var(--gold);
+    border-radius: 50%;
+    color: var(--forest-earth);
+    font-size: 0;
+    height: 44px;
+    justify-content: center;
+    margin-right: 1.25rem;
+    padding: 0;
+    width: 44px;
+}
+
+.brand-monogram::before {
+    content: "V";
+    font-size: 1.35rem;
+    letter-spacing: 0;
+}
+
+.navbar .nav-link {
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+    text-transform: none;
+}
+
+.navbar .nav-link::before,
+.navbar .nav-link::after {
+    display: none;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus-visible {
+    transform: none;
+}
+
+.navbar .nav-booking-btn {
+    background: var(--cream);
+    border-color: var(--cream);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    min-height: 44px;
+    min-width: 0;
+    padding: 0.6rem 1.5rem;
+    text-transform: none;
+}
+
+.navbar .nav-booking-btn:hover,
+.navbar .nav-booking-btn:focus-visible,
+.navbar .nav-booking-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    transform: none;
+}
+
+@media (min-width: 992px) {
+    .navbar > .container {
+        margin-inline: auto;
+        max-width: none;
+        width: min(1140px, 100% - 6rem);
+    }
+
+    /* Scrolled: shrink to the compact pill. */
+    .navbar.navbar-scrolled > .container {
+        width: fit-content;
+    }
+
+    .navbar-nav {
+        gap: 0.25rem !important;
+    }
+
+    .navbar .nav-link {
+        min-height: 0;
+        padding: 0.5rem 0.9rem !important;
+    }
+
+    .navbar .nav-item.ms-lg-3 {
+        margin-left: 1rem !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .navbar,
+    .navbar.navbar-scrolled {
+        padding-block: 0.75rem;
+    }
+
+    .navbar > .container {
+        flex: 1;
+        margin-inline: 1rem;
+        max-width: none;
+    }
+
+    /* Scrolled: narrower centred pill, back to full width while the menu is open. */
+    .navbar.navbar-scrolled > .container {
+        margin-inline: max(1rem, 50% - 160px);
+    }
+
+    .navbar.navbar-scrolled > .container:has(.navbar-collapse.show, .navbar-collapse.collapsing) {
+        margin-inline: 1rem;
+    }
+
+    /* Open menu: the pill becomes a rounded card. */
+    .navbar > .container:has(.navbar-collapse.show, .navbar-collapse.collapsing) {
+        border-radius: 24px;
+    }
+
+    .navbar-toggler {
+        align-items: center;
+        background: rgba(255, 255, 255, 0.08);
+        border: 0;
+        border-radius: 50%;
+        display: inline-flex;
+        height: 44px;
+        justify-content: center;
+        padding: 0;
+        width: 44px;
+    }
+
+    .navbar-toggler-icon {
+        height: 1.25rem;
+        width: 1.25rem;
+    }
+
+    .navbar-collapse {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        background: transparent;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 0.4rem;
+        padding: 0.5rem 0.25rem 0.25rem;
+    }
+
+    .navbar .nav-link {
+        border-radius: 999px;
+        min-height: 48px;
+        padding-inline: 1rem !important;
+    }
+
+    .navbar .nav-booking-btn {
+        margin-top: 0.5rem;
+        width: 100%;
+    }
+}
+
+/* g-5 rows overhang the phone-width container by 12px and cause sideways scroll; keep the vertical gap, shrink the horizontal one. */
+@media (max-width: 575.98px) {
+    .row.g-5 {
+        --bs-gutter-x: 1.5rem;
+    }
+}

@@ -713,13 +713,11 @@ function initializeNavbar() {
     }
 
     const updateNavbar = () => {
-        const isDesktop = window.matchMedia("(min-width: 992px)").matches;
-        navbar.classList.toggle("navbar-scrolled", isDesktop && window.scrollY > 70);
+        navbar.classList.toggle("navbar-scrolled", window.scrollY > 70);
     };
 
     updateNavbar();
     window.addEventListener("scroll", updateNavbar, { passive: true });
-    window.addEventListener("resize", updateNavbar);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {

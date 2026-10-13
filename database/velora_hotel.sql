@@ -5,6 +5,7 @@ CREATE DATABASE IF NOT EXISTS velora_hotel
 USE velora_hotel;
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS api_requests;
 DROP TABLE IF EXISTS bookings;
 DROP TABLE IF EXISTS contact_messages;
 DROP TABLE IF EXISTS guests;
@@ -93,6 +94,15 @@ CREATE TABLE bookings (
         REFERENCES rates(id) ON UPDATE CASCADE ON DELETE RESTRICT,
     INDEX idx_booking_dates (room_type_id, arrival_date, departure_date),
     INDEX idx_booking_status (booking_status)
+) ENGINE=InnoDB;
+
+-- Recent booking/contact requests per IP, used for rate limiting.
+CREATE TABLE api_requests (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    ip_address VARCHAR(45) NOT NULL,
+    action VARCHAR(30) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_api_requests_lookup (action, ip_address, created_at)
 ) ENGINE=InnoDB;
 
 INSERT INTO room_types

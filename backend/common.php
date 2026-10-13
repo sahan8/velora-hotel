@@ -2,7 +2,19 @@
 
 // Shared setup and helpers for the JSON API endpoints in backend/api.
 
+// Never show PHP errors to visitors; they go to the server error log instead.
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 header('Content-Type: application/json');
+header('Cache-Control: no-store');
+header('X-Content-Type-Options: nosniff');
+
+set_exception_handler(function (Throwable $error): void {
+    error_log('API error: ' . $error->getMessage());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Something went wrong. Please try again.']);
+});
 
 require_once __DIR__ . '/config/database.php';
 
@@ -31,6 +43,32 @@ function readJsonPost(): array
     }
 
     return $data;
+}
+
+// Limits how often one IP address can perform an action, e.g. 5 bookings per hour.
+// ponytail: per-IP only; visitors behind one shared IP share the limit, and an
+// attacker with many IPs is slowed, not stopped. Add CAPTCHA if abuse continues.
+function enforceRateLimit(PDO $pdo, string $action, int $maxRequests, int $windowSeconds): void
+{
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+
+    $pdo->exec('DELETE FROM api_requests WHERE created_at < NOW() - INTERVAL 1 DAY');
+
+    $statement = $pdo->prepare('
+        SELECT COUNT(*)
+        FROM api_requests
+        WHERE action = :action
+          AND ip_address = :ip
+          AND created_at > NOW() - INTERVAL :window SECOND
+    ');
+    $statement->execute(['action' => $action, 'ip' => $ip, 'window' => $windowSeconds]);
+
+    if ((int) $statement->fetchColumn() >= $maxRequests) {
+        sendError(429, 'Too many requests. Please try again later.');
+    }
+
+    $pdo->prepare('INSERT INTO api_requests (ip_address, action) VALUES (:ip, :action)')
+        ->execute(['ip' => $ip, 'action' => $action]);
 }
 
 function isTooLong(string $value, int $maximum): bool

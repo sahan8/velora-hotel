@@ -19,7 +19,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL) || isTooLong($email, 255)) {
 }
 
 $phoneDigits = strlen(preg_replace('/\D/', '', $phone));
-if ($phone !== '' && ($phoneDigits < 7 || $phoneDigits > 15)) {
+if ($phone !== '' && ($phoneDigits < 7 || $phoneDigits > 15 || isTooLong($phone, 30))) {
     sendError(400, 'Phone number must contain between 7 and 15 digits');
 }
 
@@ -30,6 +30,8 @@ if ($subject === '' || isTooLong($subject, 200)) {
 if ($message === '' || isTooLong($message, 5000)) {
     sendError(400, 'Message is required and cannot exceed 5000 characters');
 }
+
+enforceRateLimit($pdo, 'contact', 5, 3600);
 
 try {
     $statement = $pdo->prepare("
