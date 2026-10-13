@@ -6,7 +6,7 @@ $configFile = __DIR__ . '/database.local.php';
 
 if (!is_file($configFile)) {
     http_response_code(500);
-    exit('Database configuration is missing.');
+    exit(json_encode(['success' => false, 'error' => 'Database configuration is missing.']));
 }
 
 $config = require $configFile;
@@ -28,7 +28,7 @@ $options = [
 try {
     $pdo = new PDO($dsn, $username, $password, $options);
 } catch (PDOException $exception) {
+    error_log('Database connection failed: ' . $exception->getMessage());
     http_response_code(500);
-
-    exit('Database connection failed.');
+    exit(json_encode(['success' => false, 'error' => 'Database connection failed.']));
 }

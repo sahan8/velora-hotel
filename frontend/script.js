@@ -1,4 +1,3 @@
-
 const {
     emptyBooking, loadBooking, saveBooking, byId, all,
     getTodayValue, calculateNights, formatCurrency, formatDate, getRoom,
@@ -20,6 +19,21 @@ function hasValidBookingSearch() {
         && Number(booking.adults) >= 1;
 }
 
+async function postJson(url, data) {
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(result.error);
+    }
+
+    return result;
+}
+
 // Home and rooms pages
 
 function initializeQuickSearch() {
@@ -39,17 +53,9 @@ function initializeQuickSearch() {
     form.addEventListener("submit", (event) => {
         event.preventDefault();
         setStatus(message, "");
-        clearFieldError(guestsInput);
 
         const datesValid = validateDates(arrivalInput, departureInput);
-        let guestsValid = true;
-
-        if (!guestsInput.value) {
-            setFieldError(guestsInput, "Please select the number of guests.");
-            guestsValid = false;
-        } else {
-            markFieldValid(guestsInput);
-        }
+        const guestsValid = validateRequiredField(guestsInput, "Please select the number of guests.");
 
         if (!datesValid || !guestsValid) {
             setStatus(message, "Please correct the highlighted booking details.");
@@ -87,8 +93,6 @@ function initializeBookingSuggestion() {
         return;
     }
 
-    // Booking popup
-
     window.setTimeout(() => {
         suggestion.hidden = false;
         suggestion.classList.add("show");
@@ -116,12 +120,11 @@ function initializeRoomLinks() {
                 return;
             }
 
-            const hasValidDates = hasValidBookingSearch();
             booking.room = selectedRoom.id;
             booking.rate = null;
             booking.subtotal = 0;
             booking.total = 0;
-            booking.currentStep = hasValidDates ? 3 : 1;
+            booking.currentStep = hasValidBookingSearch() ? 3 : 1;
             saveBooking(booking);
         });
     });
@@ -137,8 +140,7 @@ function calculateBookingTotal() {
         return;
     }
 
-    const nightlyRate = selectedRoom.price + selectedRate.extra;
-    booking.subtotal = nightlyRate * booking.nights;
+    booking.subtotal = (selectedRoom.price + selectedRate.extra) * booking.nights;
     booking.total = booking.subtotal;
 }
 
@@ -158,17 +160,20 @@ function initializeBookingPage() {
     const adultInput = byId("adultGuests");
     const teenInput = byId("teenGuests");
     const childInput = byId("childGuests");
-    const searchForm = byId("bookingSearchForm");
+    const searchMessage = byId("bookingSearchMessage");
+    const roomMessage = byId("roomSelectionMessage");
+    const guestForm = byId("guestDetailsForm");
+    const paymentForm = byId("paymentForm");
+    const paymentMessage = byId("paymentConfirmation");
+    const payButton = byId("payConfirmBtn");
     let availableRoomCodes = null;
 
     function resetFieldValidation(field, statusElement = null) {
-        if (!field) return;
-
         const reset = () => {
             clearFieldError(field);
             field.classList.remove("is-valid");
             if (statusElement) setStatus(statusElement, "");
-            if (field.closest("#paymentForm")) byId("payConfirmBtn").disabled = false;
+            if (field.closest("#paymentForm")) payButton.disabled = false;
         };
 
         field.addEventListener(field.matches("select, input[type='date']") ? "change" : "input", reset);
@@ -199,36 +204,9 @@ function initializeBookingPage() {
         }
     }
 
-    function hasValidSearch() {
-        return hasValidBookingSearch();
-    }
-
-    function getSafeStep() {
-        let step = Math.min(6, Math.max(1, Number(booking.currentStep) || 1));
-
-        if (!hasValidSearch()) {
-            return 1;
-        }
-
-        const selectedRoom = getRoom(booking.room);
-
-        if (!selectedRoom || selectedRoom.maxGuests < getTotalGuests()) {
-            return Math.min(step, 2);
-        }
-
-        if (!getRate(booking.room, booking.rate)) {
-            return Math.min(step, 3);
-        }
-
-        if (!booking.guest) {
-            return Math.min(step, 5);
-        }
-
-        return step;
-    }
-
+    // The furthest step the current booking data allows.
     function getAvailableStepLimit() {
-        if (!hasValidSearch()) return 1;
+        if (!hasValidBookingSearch()) return 1;
 
         const selectedRoom = getRoom(booking.room);
         if (!selectedRoom || selectedRoom.maxGuests < getTotalGuests()) return 2;
@@ -244,48 +222,29 @@ function initializeBookingPage() {
         byId("roomSearchGuests").textContent = `${totalGuests} guest${totalGuests === 1 ? "" : "s"}`;
     }
 
-  function updateRoomAvailability() {
-    const totalGuests = getTotalGuests();
-    let availableRooms = 0;
+    function updateRoomAvailability() {
+        const totalGuests = getTotalGuests();
+        let availableRooms = 0;
 
-    document.querySelectorAll(".show-rates-btn").forEach((button) => {
-        const room = getRoom(button.dataset.room);
+        all(".show-rates-btn").forEach((button) => {
+            const room = getRoom(button.dataset.room);
+            const exceedsCapacity = !room || room.maxGuests < totalGuests;
+            const bookedOut = availableRoomCodes !== null && !availableRoomCodes.has(button.dataset.room);
+            const unavailable = exceedsCapacity || bookedOut;
 
-        const exceedsCapacity =
-            !room || room.maxGuests < totalGuests;
+            if (!unavailable) {
+                availableRooms += 1;
+            }
 
-        const unavailableInDatabase =
-            availableRoomCodes !== null &&
-            !availableRoomCodes.has(button.dataset.room);
+            button.disabled = unavailable;
+            button.textContent = unavailable ? "Not Available" : "Show Rates";
+            button.closest(".booking-room-option").classList.toggle("room-unavailable", unavailable);
+        });
 
-        const unavailable =
-            exceedsCapacity || unavailableInDatabase;
-
-        if (!unavailable) {
-            availableRooms += 1;
+        if (totalGuests > 0 && availableRooms === 0) {
+            setStatus(roomMessage, `No rooms are available for ${totalGuests} guests and the selected dates.`);
         }
-
-        button.disabled = unavailable;
-
-        button
-            .closest(".booking-room-option")
-            .classList.toggle("room-unavailable", unavailable);
-
-        button.textContent =
-            unavailable ? "Not Available" : "Show Rates";
-    });
-
-    const message = document.getElementById(
-        "roomSelectionMessage"
-    );
-
-    if (totalGuests > 0 && availableRooms === 0) {
-        setStatus(
-            message,
-            `No rooms are available for ${totalGuests} guests and the selected dates.`
-        );
     }
-}
 
     function updateRateStep() {
         const selectedRoom = getRoom(booking.room);
@@ -294,17 +253,17 @@ function initializeBookingPage() {
             return;
         }
 
-        document.getElementById("rateSelectedRoom").textContent = selectedRoom.name;
-        document.getElementById("rateSelectedRoomImage").src = selectedRoom.image;
-        document.getElementById("rateSelectedRoomImage").alt = `Selected ${selectedRoom.name}`;
-        document.getElementById("rateSelectedDates").textContent = `${formatDate(booking.arrival)} – ${formatDate(booking.departure)} · ${booking.nights} night${booking.nights === 1 ? "" : "s"}`;
-        document.getElementById("roomOnlyPrice").innerHTML = `${formatCurrency(selectedRoom.price)} <small>/ night</small>`;
         const roomOnlyRate = getRate(selectedRoom.id, "room-only");
         const breakfastRate = getRate(selectedRoom.id, "breakfast");
-        document.getElementById("roomOnlyPrice").innerHTML = `${formatCurrency(selectedRoom.price + (roomOnlyRate?.extra || 0))} <small>/ night</small>`;
-        document.getElementById("breakfastPrice").innerHTML = `${formatCurrency(selectedRoom.price + (breakfastRate?.extra || 0))} <small>/ night</small>`;
 
-        document.querySelectorAll('input[name="rateType"]').forEach((input) => {
+        byId("rateSelectedRoom").textContent = selectedRoom.name;
+        byId("rateSelectedRoomImage").src = selectedRoom.image;
+        byId("rateSelectedRoomImage").alt = `Selected ${selectedRoom.name}`;
+        byId("rateSelectedDates").textContent = `${formatDate(booking.arrival)} – ${formatDate(booking.departure)} · ${booking.nights} night${booking.nights === 1 ? "" : "s"}`;
+        byId("roomOnlyPrice").innerHTML = `${formatCurrency(selectedRoom.price + (roomOnlyRate?.extra || 0))} <small>/ night</small>`;
+        byId("breakfastPrice").innerHTML = `${formatCurrency(selectedRoom.price + (breakfastRate?.extra || 0))} <small>/ night</small>`;
+
+        all('input[name="rateType"]').forEach((input) => {
             input.checked = input.value === booking.rate;
         });
     }
@@ -315,25 +274,57 @@ function initializeBookingPage() {
         const children = Number(booking.teens) + Number(booking.children);
 
         calculateBookingTotal();
-        document.getElementById("summaryRoom").textContent = selectedRoom ? selectedRoom.name : "Not selected";
-        document.getElementById("summaryArrival").textContent = formatDate(booking.arrival);
-        document.getElementById("summaryDeparture").textContent = formatDate(booking.departure);
-        document.getElementById("summaryNights").textContent = booking.nights;
-        document.getElementById("summaryGuests").textContent = `${booking.adults} adult${Number(booking.adults) === 1 ? "" : "s"} / ${children} children`;
-        document.getElementById("summaryRate").textContent = selectedRate ? selectedRate.name : "Not selected";
-        document.getElementById("summarySubtotal").textContent = formatCurrency(booking.subtotal);
-        document.getElementById("summaryTotal").textContent = formatCurrency(booking.total);
+        byId("summaryRoom").textContent = selectedRoom ? selectedRoom.name : "Not selected";
+        byId("summaryArrival").textContent = formatDate(booking.arrival);
+        byId("summaryDeparture").textContent = formatDate(booking.departure);
+        byId("summaryNights").textContent = booking.nights;
+        byId("summaryGuests").textContent = `${booking.adults} adult${Number(booking.adults) === 1 ? "" : "s"} / ${children} children`;
+        byId("summaryRate").textContent = selectedRate ? selectedRate.name : "Not selected";
+        byId("summarySubtotal").textContent = formatCurrency(booking.subtotal);
+        byId("summaryTotal").textContent = formatCurrency(booking.total);
         saveBooking(booking);
     }
 
     function updatePaymentSummary() {
         const selectedRoom = getRoom(booking.room);
         const selectedRate = getRate(booking.room, booking.rate);
-        document.getElementById("paymentRoom").textContent = selectedRoom ? selectedRoom.name : "Not selected";
-        document.getElementById("paymentDates").textContent = `${formatDate(booking.arrival, true)} – ${formatDate(booking.departure, true)}`;
-        document.getElementById("paymentRate").textContent = selectedRate ? selectedRate.name : "Not selected";
-        document.getElementById("paymentTotal").textContent = formatCurrency(booking.total);
+        byId("paymentRoom").textContent = selectedRoom ? selectedRoom.name : "Not selected";
+        byId("paymentDates").textContent = `${formatDate(booking.arrival, true)} – ${formatDate(booking.departure, true)}`;
+        byId("paymentRate").textContent = selectedRate ? selectedRate.name : "Not selected";
+        byId("paymentTotal").textContent = formatCurrency(booking.total);
     }
+
+    async function fetchAvailableRoomCodes() {
+        const query = new URLSearchParams({
+            arrival: booking.arrival,
+            departure: booking.departure,
+            adults: booking.adults,
+            teens: booking.teens,
+            children: booking.children
+        });
+        const response = await fetch(`../backend/api/availability.php?${query}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error);
+        }
+
+        return new Set(result.rooms.map((room) => room.code));
+    }
+
+    function isExpiryCurrent(value) {
+        const match = value.trim().match(/^(0[1-9]|1[0-2])\s*\/\s*(\d{2})$/);
+
+        if (!match) {
+            return false;
+        }
+
+        const now = new Date();
+        const lastDayOfExpiryMonth = new Date(2000 + Number(match[2]), Number(match[1]), 0);
+        return lastDayOfExpiryMonth >= new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+
+    // Restore the saved booking into the page.
 
     setDateRestrictions(arrivalInput, departureInput);
     arrivalInput.value = booking.arrival;
@@ -344,11 +335,11 @@ function initializeBookingPage() {
     departureInput.min = booking.arrival || getTodayValue();
 
     if (booking.guest) {
-        document.getElementById("firstName").value = booking.guest.firstName || "";
-        document.getElementById("lastName").value = booking.guest.lastName || "";
-        document.getElementById("guestEmail").value = booking.guest.email || "";
-        document.getElementById("guestPhone").value = booking.guest.phone || "";
-        document.getElementById("guestCountry").value = booking.guest.country || "";
+        byId("firstName").value = booking.guest.firstName || "";
+        byId("lastName").value = booking.guest.lastName || "";
+        byId("guestEmail").value = booking.guest.email || "";
+        byId("guestPhone").value = booking.guest.phone || "";
+        byId("guestCountry").value = booking.guest.country || "";
     }
 
     updateSearchSummary();
@@ -356,17 +347,11 @@ function initializeBookingPage() {
     updateRateStep();
     updateSummary();
     updatePaymentSummary();
-    showStep(getSafeStep(), false);
+    showStep(Math.min(Number(booking.currentStep) || 1, getAvailableStepLimit()), false);
 
-    const searchMessage = byId("bookingSearchMessage");
     [arrivalInput, departureInput, adultInput, teenInput, childInput]
         .forEach((field) => resetFieldValidation(field, searchMessage));
-
-    const guestForm = byId("guestDetailsForm");
     guestForm.querySelectorAll("input").forEach((field) => resetFieldValidation(field));
-
-    const paymentForm = byId("paymentForm");
-    const paymentMessage = byId("paymentConfirmation");
     paymentForm.querySelectorAll("input").forEach((field) => resetFieldValidation(field, paymentMessage));
 
     const expiryInput = byId("cardExpiry");
@@ -379,21 +364,19 @@ function initializeBookingPage() {
             return;
         }
 
-        const month = digits.slice(0, 2);
-        const year = digits.slice(2);
-        expiryInput.value = `${month} / ${year}`;
+        expiryInput.value = `${digits.slice(0, 2)} / ${digits.slice(2)}`;
     });
 
-    searchForm.addEventListener("submit", async (event) => {
+    // Step 1: search
+
+    byId("bookingSearchForm").addEventListener("submit", async (event) => {
         event.preventDefault();
-        const message = document.getElementById("bookingSearchMessage");
-        setStatus(message, "");
-        setStatus(document.getElementById("roomSelectionMessage"), "");
+        setStatus(searchMessage, "");
+        setStatus(roomMessage, "");
 
         const datesValid = validateDates(arrivalInput, departureInput);
         const adults = Number(adultInput.value);
 
-        clearFieldError(adultInput);
         if (adults < 1) {
             setFieldError(adultInput, "At least one adult is required.");
         } else {
@@ -401,7 +384,7 @@ function initializeBookingPage() {
         }
 
         if (!datesValid || adults < 1) {
-            setStatus(message, "Please correct the highlighted search details.");
+            setStatus(searchMessage, "Please correct the highlighted search details.");
             return;
         }
 
@@ -417,65 +400,25 @@ function initializeBookingPage() {
         booking.guest = null;
         booking.maxStepReached = 2;
 
-        const searchButton = document.getElementById(
-    "searchRoomsBtn"
-);
+        const searchButton = byId("searchRoomsBtn");
+        searchButton.disabled = true;
+        setStatus(searchMessage, "Checking room availability...", "success");
 
-searchButton.disabled = true;
-setStatus(message, "Checking room availability...", "success");
-
-try {
-    const query = new URLSearchParams({
-        arrival: booking.arrival,
-        departure: booking.departure,
-        adults: booking.adults,
-        teens: booking.teens,
-        children: booking.children
-    });
-
-    const response = await fetch(
-        `../backend/api/availability.php?${query}`
-    );
-
-    const result = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            result.error || "Unable to check room availability."
-        );
-    }
-
-    availableRoomCodes = new Set(
-        result.rooms.map((room) => room.code)
-    );
-
-    setStatus(message, "");
-} catch (error) {
-    setStatus(
-        message,
-        error.message || "Unable to check room availability."
-    );
-
-    return;
-} finally {
-    searchButton.disabled = false;
-}
+        try {
+            availableRoomCodes = await fetchAvailableRoomCodes();
+            setStatus(searchMessage, "");
+        } catch (error) {
+            setStatus(searchMessage, error.message || "Unable to check room availability.");
+            return;
+        } finally {
+            searchButton.disabled = false;
+        }
 
         const selectedRoom = getRoom(booking.room);
 
-        if (
-            selectedRoom &&
-            (
-                selectedRoom.maxGuests < getTotalGuests() ||
-                !availableRoomCodes.has(selectedRoom.id)
-            )
-        ) {
+        if (selectedRoom && (selectedRoom.maxGuests < getTotalGuests() || !availableRoomCodes.has(selectedRoom.id))) {
             booking.room = null;
-
-            setStatus(
-                document.getElementById("roomSelectionMessage"),
-                "Your previous room is unavailable. Please choose another room."
-            );
+            setStatus(roomMessage, "Your previous room is unavailable. Please choose another room.");
         }
 
         updateSearchSummary();
@@ -484,17 +427,18 @@ try {
         showStep(2);
     });
 
-    document.querySelectorAll(".show-rates-btn").forEach((button) => {
+    // Step 2: room
+
+    all(".show-rates-btn").forEach((button) => {
         button.addEventListener("click", () => {
             const selectedRoom = getRoom(button.dataset.room);
-            const message = document.getElementById("roomSelectionMessage");
 
             if (!selectedRoom || selectedRoom.maxGuests < getTotalGuests()) {
-                setStatus(message, `This room accommodates a maximum of ${selectedRoom ? selectedRoom.maxGuests : 0} guests.`);
+                setStatus(roomMessage, `This room accommodates a maximum of ${selectedRoom ? selectedRoom.maxGuests : 0} guests.`);
                 return;
             }
 
-            setStatus(message, "");
+            setStatus(roomMessage, "");
             booking.room = selectedRoom.id;
             booking.rate = null;
             updateRateStep();
@@ -503,20 +447,22 @@ try {
         });
     });
 
-    document.querySelectorAll('input[name="rateType"]').forEach((input) => {
+    // Step 3: rate
+
+    all('input[name="rateType"]').forEach((input) => {
         input.addEventListener("change", () => {
             booking.rate = input.value;
             calculateBookingTotal();
             saveBooking(booking);
-            setStatus(document.getElementById("rateSelectionMessage"), "");
+            setStatus(byId("rateSelectionMessage"), "");
         });
     });
 
-    document.getElementById("continueToSummaryBtn").addEventListener("click", () => {
+    byId("continueToSummaryBtn").addEventListener("click", () => {
         const selectedRate = document.querySelector('input[name="rateType"]:checked');
 
         if (!selectedRate) {
-            setStatus(document.getElementById("rateSelectionMessage"), "Please select a rate before continuing.");
+            setStatus(byId("rateSelectionMessage"), "Please select a rate before continuing.");
             return;
         }
 
@@ -525,20 +471,22 @@ try {
         showStep(4);
     });
 
-    document.getElementById("continueToGuestBtn").addEventListener("click", () => showStep(5));
+    // Step 4: summary
 
-    document.getElementById("guestDetailsForm").addEventListener("submit", (event) => {
+    byId("continueToGuestBtn").addEventListener("click", () => showStep(5));
+
+    // Step 5: guest details
+
+    guestForm.addEventListener("submit", (event) => {
         event.preventDefault();
         const fields = {
-            firstName: document.getElementById("firstName"),
-            lastName: document.getElementById("lastName"),
-            email: document.getElementById("guestEmail"),
-            phone: document.getElementById("guestPhone"),
-            country: document.getElementById("guestCountry")
+            firstName: byId("firstName"),
+            lastName: byId("lastName"),
+            email: byId("guestEmail"),
+            phone: byId("guestPhone"),
+            country: byId("guestCountry")
         };
         let valid = true;
-
-        Object.values(fields).forEach(clearFieldError);
 
         valid = validateRequiredField(fields.firstName, "Please enter your first name.") && valid;
         valid = validateRequiredField(fields.lastName, "Please enter your last name.") && valid;
@@ -562,125 +510,36 @@ try {
         showStep(6);
     });
 
-document
-    .getElementById("paymentForm")
-    .addEventListener("submit", async (event) => {
+    // Step 6: payment
+
+    paymentForm.addEventListener("submit", async (event) => {
         event.preventDefault();
+        setStatus(paymentMessage, "");
 
-        const cardholder =
-            document.getElementById("cardholderName");
-
-        const cardNumber =
-            document.getElementById("cardNumber");
-
-        const expiry =
-            document.getElementById("cardExpiry");
-
-        const cvv =
-            document.getElementById("cardCvv");
-
-        const confirmation =
-            document.getElementById("paymentConfirmation");
-
-        const payButton =
-            document.getElementById("payConfirmBtn");
-
-        const numericCard =
-            cardNumber.value.replace(/\D/g, "");
-
-        const expiryMatch = expiry.value
-            .trim()
-            .match(/^(0[1-9]|1[0-2])\s*\/\s*(\d{2})$/);
-
-        const now = new Date();
-
-        const expiryIsCurrent = expiryMatch
-            ? new Date(
-                2000 + Number(expiryMatch[2]),
-                Number(expiryMatch[1]),
-                0
-            ) >= new Date(
-                now.getFullYear(),
-                now.getMonth(),
-                1
-            )
-            : false;
-
+        const cardDigits = byId("cardNumber").value.replace(/\D/g, "");
         let valid = true;
 
-        [cardholder, cardNumber, expiry, cvv]
-            .forEach(clearFieldError);
-
-        setStatus(confirmation, "");
-
-        if (!cardholder.value.trim()) {
-            setFieldError(
-                cardholder,
-                "Please enter the cardholder name."
-            );
-
-            valid = false;
-        } else {
-            markFieldValid(cardholder);
-        }
-
-        if (
-            numericCard.length < 13 ||
-            numericCard.length > 19
-        ) {
-            setFieldError(
-                cardNumber,
-                "Enter a card number between 13 and 19 digits."
-            );
-
-            valid = false;
-        } else {
-            markFieldValid(cardNumber);
-        }
-
-        if (!expiryIsCurrent) {
-            setFieldError(
-                expiry,
-                "Enter a current expiry date in MM / YY format."
-            );
-
-            valid = false;
-        } else {
-            markFieldValid(expiry);
-        }
-
-        if (!/^\d{3,4}$/.test(cvv.value.trim())) {
-            setFieldError(
-                cvv,
-                "Enter a 3 or 4 digit CVV."
-            );
-
-            valid = false;
-        } else {
-            markFieldValid(cvv);
-        }
+        valid = validateRequiredField(byId("cardholderName"), "Please enter the cardholder name.") && valid;
+        valid = validateRequiredField(byId("cardNumber"), "Enter a card number between 13 and 19 digits.",
+            () => cardDigits.length >= 13 && cardDigits.length <= 19) && valid;
+        valid = validateRequiredField(byId("cardExpiry"), "Enter a current expiry date in MM / YY format.", isExpiryCurrent) && valid;
+        valid = validateRequiredField(byId("cardCvv"), "Enter a 3 or 4 digit CVV.", (value) => /^\d{3,4}$/.test(value)) && valid;
 
         if (!valid) {
             return;
         }
 
         payButton.disabled = true;
-
-        setStatus(
-            confirmation,
-            "Confirming your booking...",
-            "success"
-        );
+        setStatus(paymentMessage, "Confirming your booking...", "success");
 
         try {
-            const selectedDatabaseRate = getRate(booking.room, booking.rate);
+            const selectedRate = getRate(booking.room, booking.rate);
 
-            if (!selectedDatabaseRate) {
-                throw new Error(
-                    "The selected room rate was not found."
-                );
+            if (!selectedRate) {
+                throw new Error("The selected room rate was not found.");
             }
 
+            // Reused on retries so the server never creates the same booking twice.
             if (!booking.requestToken) {
                 booking.requestToken = typeof crypto.randomUUID === "function"
                     ? crypto.randomUUID()
@@ -688,76 +547,43 @@ document
                 saveBooking(booking);
             }
 
-            const bookingData = {
+            const result = await postJson("../backend/api/bookings.php", {
                 requestToken: booking.requestToken,
                 arrival: booking.arrival,
                 departure: booking.departure,
                 adults: Number(booking.adults),
                 teens: Number(booking.teens),
                 children: Number(booking.children),
-                roomTypeId: Number(
-                    selectedDatabaseRate.roomTypeId
-                ),
-                rateId: Number(
-                    selectedDatabaseRate.id
-                ),
+                roomTypeId: selectedRate.roomTypeId,
+                rateId: selectedRate.id,
                 guest: booking.guest
-            };
+            });
 
-            const bookingResponse = await fetch(
-                "../backend/api/bookings.php",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(bookingData)
-                }
-            );
-
-            const result =
-                await bookingResponse.json();
-
-            if (!bookingResponse.ok) {
-                throw new Error(
-                    result.error ||
-                    "The booking could not be confirmed."
-                );
-            }
-
-            const guestName = booking.guest.firstName;
-            const successDates = `${formatDate(booking.arrival, true)} – ${formatDate(booking.departure, true)}`;
-
-            document.getElementById("successGuestName").textContent = `${guestName}.`;
-            document.getElementById("successBookingReference").textContent = result.reference;
-            document.getElementById("successRoom").textContent = result.room;
-            document.getElementById("successDates").textContent = successDates;
-            document.getElementById("successTotal").textContent = formatCurrency(result.total);
-            document.getElementById("paymentStepHeading").hidden = true;
-            document.getElementById("paymentStepContent").hidden = true;
-            document.getElementById("bookingSuccessPanel").hidden = false;
+            byId("successGuestName").textContent = `${booking.guest.firstName}.`;
+            byId("successBookingReference").textContent = result.reference;
+            byId("successRoom").textContent = result.room;
+            byId("successDates").textContent = `${formatDate(booking.arrival, true)} – ${formatDate(booking.departure, true)}`;
+            byId("successTotal").textContent = formatCurrency(result.total);
+            byId("paymentStepHeading").hidden = true;
+            byId("paymentStepContent").hidden = true;
+            byId("bookingSuccessPanel").hidden = false;
 
             booking = { ...emptyBooking };
             availableRoomCodes = null;
             saveBooking(booking);
         } catch (error) {
-            setStatus(
-                confirmation,
-                error.message ||
-                "The booking could not be confirmed."
-            );
-
+            setStatus(paymentMessage, error.message || "The booking could not be confirmed.");
             payButton.disabled = false;
         }
     });
 
-    document.querySelectorAll(".booking-back-btn").forEach((button) => {
+    // Navigation
+
+    all(".booking-back-btn").forEach((button) => {
         button.addEventListener("click", () => showStep(Number(button.dataset.backStep)));
     });
 
-    document.getElementById("startNewBookingBtn").addEventListener("click", () => {
-        window.location.reload();
-    });
+    byId("startNewBookingBtn").addEventListener("click", () => window.location.reload());
 
     progressSteps.forEach((progressStep) => {
         progressStep.setAttribute("role", "button");
@@ -765,10 +591,7 @@ document
 
         const navigateToStep = () => {
             const targetStep = Number(progressStep.dataset.step);
-            const furthestAllowedStep = Math.min(
-                Number(booking.maxStepReached) || 1,
-                getAvailableStepLimit()
-            );
+            const furthestAllowedStep = Math.min(Number(booking.maxStepReached) || 1, getAvailableStepLimit());
 
             if (targetStep <= furthestAllowedStep) {
                 showStep(targetStep);
@@ -788,7 +611,7 @@ document
 // Contact and shared page features
 
 function initializeContactForm() {
-    const form = document.getElementById("contactForm");
+    const form = byId("contactForm");
 
     if (!form) {
         return;
@@ -797,99 +620,47 @@ function initializeContactForm() {
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        const name = document.getElementById("contactName");
-        const email = document.getElementById("contactEmail");
-        const phone = document.getElementById("contactPhone");
-        const subject = document.getElementById("contactSubject");
-        const message = document.getElementById("contactMessage");
-        const status = document.getElementById("contactSuccess");
+        const status = byId("contactSuccess");
         const submitButton = form.querySelector('button[type="submit"]');
-
+        const fields = {
+            name: byId("contactName"),
+            email: byId("contactEmail"),
+            phone: byId("contactPhone"),
+            subject: byId("contactSubject"),
+            message: byId("contactMessage")
+        };
         let valid = true;
 
         clearFormValidation(form);
         setStatus(status, "");
 
-        valid =
-            validateRequiredField(
-                name,
-                "Please enter your name."
-            ) && valid;
-
-        valid =
-            validateRequiredField(
-                email,
-                "Please enter a valid email address.",
-                validateEmail
-            ) && valid;
-
-        valid =
-            validateRequiredField(
-                phone,
-                "Please enter a valid phone number.",
-                validatePhone
-            ) && valid;
-
-        valid =
-            validateRequiredField(
-                subject,
-                "Please enter a subject."
-            ) && valid;
-
-        valid =
-            validateRequiredField(
-                message,
-                "Please enter your message."
-            ) && valid;
+        valid = validateRequiredField(fields.name, "Please enter your name.") && valid;
+        valid = validateRequiredField(fields.email, "Please enter a valid email address.", validateEmail) && valid;
+        valid = validateRequiredField(fields.phone, "Please enter a valid phone number.", validatePhone) && valid;
+        valid = validateRequiredField(fields.subject, "Please enter a subject.") && valid;
+        valid = validateRequiredField(fields.message, "Please enter your message.") && valid;
 
         if (!valid) {
             return;
         }
 
-        const contactData = {
-            name: name.value.trim(),
-            email: email.value.trim(),
-            phone: phone.value.trim(),
-            subject: subject.value.trim(),
-            message: message.value.trim()
-        };
-
         submitButton.disabled = true;
         setStatus(status, "Sending your message...", "success");
 
         try {
-            const response = await fetch(
-                "../backend/api/contact.php",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(contactData)
-                }
-            );
+            const result = await postJson("../backend/api/contact.php", {
+                name: fields.name.value.trim(),
+                email: fields.email.value.trim(),
+                phone: fields.phone.value.trim(),
+                subject: fields.subject.value.trim(),
+                message: fields.message.value.trim()
+            });
 
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    result.error || "Unable to send your message."
-                );
-            }
-
-            setStatus(
-                status,
-                result.message,
-                "success"
-            );
-
+            setStatus(status, result.message, "success");
             form.reset();
             clearFormValidation(form);
         } catch (error) {
-            setStatus(
-                status,
-                error.message || "Unable to send your message."
-            );
+            setStatus(status, error.message || "Unable to send your message.");
         } finally {
             submitButton.disabled = false;
         }
@@ -897,7 +668,7 @@ function initializeContactForm() {
 }
 
 function initializeGallery() {
-    const gallery = document.getElementById("hotelGallery");
+    const gallery = byId("hotelGallery");
 
     if (!gallery || typeof lightGallery === "undefined") {
         return;
@@ -922,7 +693,7 @@ function initializeGallery() {
 }
 
 function initializeSmoothLinks() {
-    document.querySelectorAll('a[href^="#"]:not([href="#"])').forEach((link) => {
+    all('a[href^="#"]:not([href="#"])').forEach((link) => {
         link.addEventListener("click", (event) => {
             const target = document.querySelector(link.getAttribute("href"));
 
@@ -958,10 +729,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadCatalogData();
     } catch (error) {
         console.error(error);
-        setStatus(
-            byId("bookingSearchMessage"),
-            "Unable to load rooms and rates. Please try again."
-        );
+        setStatus(byId("bookingSearchMessage"), "Unable to load rooms and rates. Please try again.");
     }
 
     initializeQuickSearch();
