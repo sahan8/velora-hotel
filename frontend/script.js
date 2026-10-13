@@ -1,3 +1,4 @@
+
 const {
     emptyBooking, loadBooking, saveBooking, byId, all,
     getTodayValue, calculateNights, formatCurrency, formatDate, getRoom,
